@@ -92,13 +92,14 @@ export default function App() {
 
   const currentIsland = useStore((state) => state.currentIsland)
   const introComplete = useStore((state) => state.introComplete)
+  const introLandingStarted = useStore((state) => state.introLandingStarted)
   const activeOverlay = useStore((state) => state.activeOverlay)
   const nearbyObjectId = useStore((state) => state.nearbyObjectId)
   const isDarkMode = useStore((state) => state.isDarkMode)
   const setSceneReady = useStore((state) => state.setSceneReady)
 
   const [introEnabled, setIntroEnabled] = useState(false)
-  const showIsland = introEnabled
+  const showIsland = introComplete || introLandingStarted
 
   const activeProject = activeOverlay?.startsWith('project-')
     ? PROJECTS.find((project) => `project-${project.id}` === activeOverlay)
@@ -150,7 +151,7 @@ export default function App() {
       </Canvas>
 
       {/* IntroSequence is a DOM component — must live outside the Canvas */}
-      {introEnabled ? <IntroSequence /> : null}
+      <IntroSequence introEnabled={introEnabled} />
 
       <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
 

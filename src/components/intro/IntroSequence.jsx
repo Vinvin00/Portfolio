@@ -1,57 +1,59 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import useStore from '../../store/useStore'
 
-const INTRO_START_Y = 50
+const INTRO_START_Y = 12
 const LANDING_Y = 1
 
-export default function IntroSequence() {
+export default function IntroSequence({ introEnabled }) {
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
   const setIntroComplete = useStore((s) => s.setIntroComplete)
+  const setIntroLandingStarted = useStore((s) => s.setIntroLandingStarted)
   const introComplete = useStore((s) => s.introComplete)
 
-  const [overlayVisible, setOverlayVisible] = useState(!introComplete)
-  const overlayRef = useRef(null)
   const promptRef = useRef(null)
+  const promptRevealTweenRef = useRef(null)
   const pulseRef = useRef(null)
   const transitionTimelineRef = useRef(null)
+  const introActivatedRef = useRef(false)
   const landingTriggeredRef = useRef(introComplete)
 
   useEffect(() => {
-    if (introComplete || !overlayRef.current || !promptRef.current) {
-      setOverlayVisible(false)
+    if (!introEnabled || introComplete || introActivatedRef.current || !promptRef.current) {
       return undefined
     }
+    introActivatedRef.current = true
+    landingTriggeredRef.current = false
+    setIntroLandingStarted(false)
 
-    setOverlayVisible(true)
-    setPlayerPosition({ x: 0, y: INTRO_START_Y, z: 0 })
-    gsap.set(overlayRef.current, { opacity: 1 })
+    gsap.set(promptRef.current, { opacity: 0 })
+    gsap.set('#intro-name', { opacity: 0.85, letterSpacing: '0.2em', y: 0 })
 
-    const introNameTween = gsap.fromTo(
-      '#intro-name',
-      { opacity: 0, letterSpacing: '0.6em', y: -16 },
-      {
-        opacity: 0.85,
-        letterSpacing: '0.2em',
-        y: 0,
-        duration: 1.1,
-        ease: 'power3.out',
+    promptRevealTweenRef.current = gsap.to(promptRef.current, {
+      opacity: 0.6,
+      duration: 0.45,
+      ease: 'power2.out',
+      delay: 0.15,
+      onComplete: () => {
+        pulseRef.current = gsap.fromTo(
+          promptRef.current,
+          { opacity: 0.3 },
+          { opacity: 0.7, duration: 1.1, ease: 'sine.inOut', yoyo: true, repeat: -1 },
+        )
       },
-    )
-
-    pulseRef.current = gsap.fromTo(
-      promptRef.current,
-      { opacity: 0.3 },
-      { opacity: 0.7, duration: 1.1, ease: 'sine.inOut', yoyo: true, repeat: -1 },
-    )
+    })
 
     const handleLand = () => {
       if (landingTriggeredRef.current) return
       landingTriggeredRef.current = true
+      setIntroLandingStarted(true)
 
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
+      promptRevealTweenRef.current?.kill()
       pulseRef.current?.kill()
+      gsap.set('#intro-name', { opacity: 0 })
+      setPlayerPosition({ x: 0, y: INTRO_START_Y, z: 0 })
 
       const landing = { y: INTRO_START_Y }
       transitionTimelineRef.current?.kill()
@@ -60,28 +62,10 @@ export default function IntroSequence() {
           onComplete: () => {
             setPlayerPosition({ x: 0, y: LANDING_Y, z: 0 })
             setIntroComplete(true)
-            setOverlayVisible(false)
             gsap.set('#intro-name', { opacity: 0 })
           },
         })
-        .to(
-          overlayRef.current,
-          {
-            opacity: 0,
-            duration: 0.75,
-            ease: 'power2.out',
-          },
-          0.08,
-        )
-        .to(
-          '#intro-name',
-          {
-            opacity: 0,
-            duration: 0.75,
-            ease: 'power2.out',
-          },
-          0,
-        )
+        .to(promptRef.current, { opacity: 0, duration: 0.3, ease: 'power2.out' }, 0)
         .to(
           landing,
           {
@@ -122,22 +106,16 @@ export default function IntroSequence() {
     }
 
     return () => {
-      introNameTween.kill()
+      promptRevealTweenRef.current?.kill()
       pulseRef.current?.kill()
       transitionTimelineRef.current?.kill()
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
     }
-  }, [introComplete, setIntroComplete, setPlayerPosition])
-
-  if (!overlayVisible) return null
+  }, [introComplete, introEnabled, setIntroComplete, setIntroLandingStarted, setPlayerPosition])
 
   return (
-    <div
-      ref={overlayRef}
-      className="pointer-events-none fixed inset-0 z-40 select-none"
-      style={{ background: 'linear-gradient(180deg, rgba(8,10,14,0.6), rgba(8,10,14,0.18))' }}
-    >
+    <div className="pointer-events-none fixed inset-0 z-40 select-none">
       <div
         ref={promptRef}
         style={{
@@ -149,6 +127,7 @@ export default function IntroSequence() {
           fontSize: '0.75rem',
           letterSpacing: '0.25em',
           color: 'rgba(255, 255, 255, 0.55)',
+          opacity: 0,
         }}
       >
         PRESS SPACE TO START

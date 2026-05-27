@@ -130,7 +130,7 @@ export default function App() {
 
       <Canvas
         className="h-screen w-screen"
-        style={{ background: DARK_SCENE }}
+        style={{ background: '#0d1117' }}
         shadows
         onCreated={() => setSceneReady(true)}
         camera={{

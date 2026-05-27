@@ -8,7 +8,7 @@ const useStore = create((set) => ({
   introComplete: false,
   sceneReady: false,
   isRespawning: false,
-  playerPosition: { x: 0, y: 0, z: 0 },
+  playerPosition: { x: 0, y: 50, z: 0 },
 
   setCurrentIsland: (currentIsland) => set({ currentIsland }),
   setActiveOverlay: (activeOverlay) => set({ activeOverlay }),

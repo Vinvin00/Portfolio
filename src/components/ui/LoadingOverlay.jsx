@@ -11,8 +11,8 @@ export default function LoadingOverlay({ onFadeComplete }) {
 
     const tween = gsap.to(overlayRef.current, {
       opacity: 0,
-      duration: 0.5,
-      delay: 0.15,
+      duration: 1.6,
+      delay: 1.2,
       ease: 'power2.out',
       onComplete() {
         onFadeComplete?.()

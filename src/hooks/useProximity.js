@@ -29,6 +29,7 @@ export function useProximity(objects, threshold = 2) {
     if (nearestRef.current !== nextNearest) {
       nearestRef.current = nextNearest
       setNearestId(nextNearest)
+      useStore.getState().setNearbyObjectId(nextNearest)
     }
   })
 

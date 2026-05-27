@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const KEY_MAP = {
   KeyW: 'forward',
@@ -12,6 +12,7 @@ const KEY_MAP = {
 }
 
 export function useCharacterControls(enabled = true) {
+  const prevEnabled = useRef(false)
   const [keys, setKeys] = useState({
     forward: false,
     backward: false,
@@ -20,7 +21,19 @@ export function useCharacterControls(enabled = true) {
   })
 
   useEffect(() => {
-    if (!enabled) return undefined
+    if (prevEnabled.current === false && enabled === true) {
+      setKeys({
+        forward: false,
+        backward: false,
+        left: false,
+        right: false,
+      })
+    }
+
+    if (!enabled) {
+      prevEnabled.current = enabled
+      return undefined
+    }
 
     const handleKeyDown = (event) => {
       const key = KEY_MAP[event.code]
@@ -36,6 +49,7 @@ export function useCharacterControls(enabled = true) {
 
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
+    prevEnabled.current = enabled
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)

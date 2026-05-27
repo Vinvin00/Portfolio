@@ -1,100 +1,312 @@
 import { useFrame, useThree } from '@react-three/fiber'
+import { useAnimations, useGLTF } from '@react-three/drei'
 import { gsap } from 'gsap'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import useStore from '../../store/useStore'
+import { MODELS } from '../../config/models'
 import { useCharacterControls } from '../../hooks/useCharacterControls'
+import { useModelAvailable } from '../../hooks/useModelAvailable'
+import useStore from '../../store/useStore'
+import CanvasErrorBoundary from './CanvasErrorBoundary'
+import CharacterFbx from './CharacterFbx'
+
+const GLB_CHARACTER_URL = '/models/character.glb'
+const CHARACTER_SCALE = 0.01
+const CHARACTER_Y_OFFSET = 0
+const IDLE_CLIP = 'Happy_Idle'
+const WALK_CLIP = 'Walking'
+const FALL_CLIP = 'Falling'
 
 const CAMERA_OFFSET = { x: 10, y: 8, z: 10 }
+const SPEED = 3
+const ISLAND_RADIUS = 8 // Must match the cylinder radius in MainIsland.jsx.
+const EDGE_DRIFT_DURATION = 0.35
+const EDGE_DRIFT_SPEED = 1.5
+const VOID_FALL_TARGET_Y = -18
+const VOID_FALL_DURATION = 1.4
+const RESPAWN_HEIGHT_Y = 16
+const REENTRY_APPROACH_Y = 1.2
+const REENTRY_FALL_DURATION = 1.1
+const REENTRY_BOUNCE_DURATION = 0.45
+const LANDED_Y = 1
+const FALL_CAMERA_LOOK_AT_Y = 1
+
+useGLTF.preload(GLB_CHARACTER_URL)
+
+function CharacterPlaceholder() {
+  return (
+    <mesh castShadow receiveShadow position={[0, 0.5, 0]}>
+      <boxGeometry args={[0.5, 1, 0.5]} />
+      <meshStandardMaterial color="#d3d9e7" roughness={0.55} metalness={0.1} />
+    </mesh>
+  )
+}
+
+function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
+  const currentAnimRef = useRef(null)
+  const { scene, animations } = useGLTF(GLB_CHARACTER_URL)
+  const { actions } = useAnimations(animations, groupRef)
+
+  useEffect(() => {
+    if (!actions) return
+    console.log('[Character] Available animation clips:', Object.keys(actions))
+  }, [actions])
+
+  useEffect(() => {
+    if (!actions || Object.keys(actions).length === 0) return
+
+    const targetClip = !introComplete ? FALL_CLIP : isMoving ? WALK_CLIP : IDLE_CLIP
+    const resolvedClip = actions[targetClip]
+      ? targetClip
+      : actions[IDLE_CLIP]
+        ? IDLE_CLIP
+        : Object.keys(actions)[0]
+
+    if (!resolvedClip || currentAnimRef.current === resolvedClip) return
+
+    console.log('[Character] animation transition:', currentAnimRef.current, '→', resolvedClip, '(introComplete:', introComplete, 'isMoving:', isMoving, ')')
+
+    const incoming = actions[resolvedClip]
+    const outgoing = currentAnimRef.current ? actions[currentAnimRef.current] : null
+
+    if (outgoing) {
+      outgoing.fadeOut(0.25)
+    }
+    incoming?.reset().fadeIn(0.25).play()
+
+    currentAnimRef.current = resolvedClip
+  }, [actions, introComplete, isMoving])
+
+  return <primitive object={scene} scale={CHARACTER_SCALE} />
+}
 
 export default function Character() {
-  const meshRef = useRef(null)
+  const groupRef = useRef(null)
   const firstIslandRender = useRef(true)
+  const fallLoopTimelineRef = useRef(null)
+  const isFallingRef = useRef(false)
+  const [isFallingVisual, setIsFallingVisual] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const glbAvailable = useModelAvailable(GLB_CHARACTER_URL)
+  const fbxAvailable = useModelAvailable(MODELS.character)
+  const fallFbxAvailable = useModelAvailable(MODELS.fallAnimation)
 
   const { camera } = useThree()
 
-  const currentIsland = useStore((state) => state.currentIsland)
-  const introComplete = useStore((state) => state.introComplete)
-  const playerPosition = useStore((state) => state.playerPosition)
-  const setPlayerPosition = useStore((state) => state.setPlayerPosition)
+  const currentIsland = useStore((s) => s.currentIsland)
+  const introComplete = useStore((s) => s.introComplete)
+  const playerPosition = useStore((s) => s.playerPosition)
+  const setPlayerPosition = useStore((s) => s.setPlayerPosition)
 
-  const canMove = introComplete && !isTransitioning
+  const canMove = introComplete && !isTransitioning && !isFallingRef.current
   const direction = useCharacterControls(canMove)
+  const isMoving = direction.x !== 0 || direction.z !== 0
 
-  const speed = 3
+  const triggerFallLoop = (fallStartPosition, moveDirection) => {
+    if (isFallingRef.current || isTransitioning || !introComplete) return
+
+    isFallingRef.current = true
+    setIsFallingVisual(true)
+    // TODO: trigger fall animation clip
+    fallLoopTimelineRef.current?.kill()
+
+    const driftDistance = EDGE_DRIFT_SPEED * EDGE_DRIFT_DURATION
+    const fallState = {
+      x: fallStartPosition.x,
+      y: fallStartPosition.y,
+      z: fallStartPosition.z,
+    }
+
+    const driftTargetX = fallStartPosition.x + moveDirection.x * driftDistance
+    const driftTargetZ = fallStartPosition.z + moveDirection.z * driftDistance
+
+    fallLoopTimelineRef.current = gsap.timeline({
+      onComplete: () => {
+        setPlayerPosition({ x: 0, y: LANDED_Y, z: 0 })
+        isFallingRef.current = false
+        setIsFallingVisual(false)
+      },
+    })
+
+    fallLoopTimelineRef.current
+      .to(
+        fallState,
+        {
+          x: driftTargetX,
+          z: driftTargetZ,
+          duration: EDGE_DRIFT_DURATION,
+          ease: 'power1.in',
+          onUpdate: () => {
+            setPlayerPosition({ x: fallState.x, y: fallState.y, z: fallState.z })
+          },
+        },
+        0,
+      )
+      .to(
+        fallState,
+        {
+          y: VOID_FALL_TARGET_Y,
+          duration: VOID_FALL_DURATION,
+          ease: 'power3.in',
+          onUpdate: () => {
+            setPlayerPosition({ x: fallState.x, y: fallState.y, z: fallState.z })
+          },
+        },
+        0,
+      )
+      .add(() => {
+        fallState.x = 0
+        fallState.y = RESPAWN_HEIGHT_Y
+        fallState.z = 0
+        setPlayerPosition({ x: 0, y: RESPAWN_HEIGHT_Y, z: 0 })
+      })
+      .to(fallState, {
+        y: REENTRY_APPROACH_Y,
+        duration: REENTRY_FALL_DURATION,
+        ease: 'power2.in',
+        onUpdate: () => {
+          setPlayerPosition({ x: 0, y: fallState.y, z: 0 })
+        },
+      })
+      .to(fallState, {
+        y: LANDED_Y,
+        duration: REENTRY_BOUNCE_DURATION,
+        ease: 'elastic.out(1, 0.28)',
+        onUpdate: () => {
+          setPlayerPosition({ x: 0, y: fallState.y, z: 0 })
+        },
+      })
+  }
 
   useEffect(() => {
     if (!introComplete) return undefined
-
     if (firstIslandRender.current) {
       firstIslandRender.current = false
       return undefined
     }
 
     setIsTransitioning(true)
-
     const fall = { y: 8 }
     setPlayerPosition({ x: 0, y: 8, z: 0 })
 
-    const timeline = gsap.timeline({
+    const tl = gsap.timeline({
       onComplete: () => {
-        setPlayerPosition({ x: 0, y: 1, z: 0 })
+        setPlayerPosition({ x: 0, y: 1 + CHARACTER_Y_OFFSET, z: 0 })
         setIsTransitioning(false)
       },
     })
 
-    timeline
-      .to(fall, {
-        y: 1.15,
-        duration: 0.5,
-        ease: 'power2.in',
-        onUpdate: () => {
-          setPlayerPosition({ x: 0, y: fall.y, z: 0 })
-        },
-      })
-      .to(fall, {
-        y: 1,
-        duration: 0.2,
-        ease: 'elastic.out(1, 0.3)',
-        onUpdate: () => {
-          setPlayerPosition({ x: 0, y: fall.y, z: 0 })
-        },
-      })
+    tl.to(fall, {
+      y: 1.15,
+      duration: 0.5,
+      ease: 'power2.in',
+      onUpdate: () => setPlayerPosition({ x: 0, y: fall.y, z: 0 }),
+    }).to(fall, {
+      y: 1,
+      duration: 0.2,
+      ease: 'elastic.out(1, 0.3)',
+      onUpdate: () => setPlayerPosition({ x: 0, y: fall.y, z: 0 }),
+    })
 
-    return () => {
-      timeline.kill()
-    }
+    return () => tl.kill()
   }, [currentIsland, introComplete, setPlayerPosition])
 
   useFrame((_, delta) => {
-    const nextPosition = { ...playerPosition }
+    if (canMove && isMoving && !isFallingRef.current) {
+      // Move relative to camera yaw (ignore pitch) so W is "up" on screen.
+      const forward = new THREE.Vector3()
+      camera.getWorldDirection(forward)
+      forward.y = 0
+      if (forward.lengthSq() === 0) {
+        forward.set(0, 0, -1)
+      } else {
+        forward.normalize()
+      }
 
-    if (canMove && (direction.x !== 0 || direction.z !== 0)) {
-      nextPosition.x += direction.x * speed * delta
-      nextPosition.z += direction.z * speed * delta
+      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
+
+      const move = new THREE.Vector3()
+        .addScaledVector(right, direction.x)
+        .addScaledVector(forward, -direction.z)
+
+      if (move.lengthSq() > 0) move.normalize()
+
+      const nextPosition = {
+        x: playerPosition.x + move.x * SPEED * delta,
+        y: playerPosition.y,
+        z: playerPosition.z + move.z * SPEED * delta,
+      }
       setPlayerPosition(nextPosition)
+
+      const distFromCenter = Math.sqrt(nextPosition.x ** 2 + nextPosition.z ** 2)
+      if (distFromCenter > ISLAND_RADIUS) {
+        triggerFallLoop(nextPosition, move)
+      }
+
+      if (groupRef.current) {
+        const angle = Math.atan2(move.x, move.z)
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, angle, 0.15)
+      }
     }
 
-    if (meshRef.current) {
-      meshRef.current.position.set(playerPosition.x, playerPosition.y, playerPosition.z)
+    if (groupRef.current) {
+      groupRef.current.position.set(
+        playerPosition.x,
+        playerPosition.y + CHARACTER_Y_OFFSET,
+        playerPosition.z,
+      )
     }
 
-    const targetVector = new THREE.Vector3(
-      playerPosition.x + CAMERA_OFFSET.x,
-      playerPosition.y + CAMERA_OFFSET.y,
-      playerPosition.z + CAMERA_OFFSET.z,
-    )
-    camera.position.lerp(targetVector, 0.08)
+    if (!isFallingRef.current) {
+      const target = new THREE.Vector3(
+        playerPosition.x + CAMERA_OFFSET.x,
+        playerPosition.y + CAMERA_OFFSET.y,
+        playerPosition.z + CAMERA_OFFSET.z,
+      )
+      camera.position.lerp(target, 0.08)
+      camera.lookAt(playerPosition.x, playerPosition.y, playerPosition.z)
+    } else {
+      const lockedTarget = new THREE.Vector3(CAMERA_OFFSET.x, CAMERA_OFFSET.y, CAMERA_OFFSET.z)
+      camera.position.lerp(lockedTarget, 0.12)
+      camera.lookAt(0, FALL_CAMERA_LOOK_AT_Y, 0)
+    }
 
-    camera.lookAt(playerPosition.x, playerPosition.y, playerPosition.z)
     camera.updateProjectionMatrix()
   })
 
+  useEffect(
+    () => () => {
+      fallLoopTimelineRef.current?.kill()
+    },
+    [],
+  )
+
   return (
-    <mesh ref={meshRef} castShadow position={[playerPosition.x, playerPosition.y, playerPosition.z]}>
-      <boxGeometry args={[0.5, 1, 0.5]} />
-      <meshStandardMaterial color="#d3d9e7" roughness={0.55} metalness={0.1} />
-    </mesh>
+    <group ref={groupRef} castShadow>
+      {glbAvailable ? (
+        <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
+          <Suspense fallback={<CharacterPlaceholder />}>
+            <GlbCharacterModel
+              groupRef={groupRef}
+              isMoving={isMoving}
+              introComplete={introComplete && !isFallingVisual}
+            />
+          </Suspense>
+        </CanvasErrorBoundary>
+      ) : fbxAvailable ? (
+        <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
+          <Suspense fallback={<CharacterPlaceholder />}>
+            <CharacterFbx
+              isMoving={isMoving}
+              introComplete={introComplete && !isFallingVisual}
+              hasDedicatedFall={fallFbxAvailable === true}
+            />
+          </Suspense>
+        </CanvasErrorBoundary>
+      ) : (
+        <CharacterPlaceholder />
+      )}
+    </group>
   )
 }

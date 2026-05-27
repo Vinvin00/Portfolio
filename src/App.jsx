@@ -1,19 +1,29 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { gsap } from 'gsap'
+import CanvasErrorBoundary from './components/scene/CanvasErrorBoundary'
 import Character from './components/scene/Character'
 import MainIsland from './components/scene/MainIsland'
 import ProjectsIsland from './components/scene/ProjectsIsland'
 import IslandObjects from './components/scene/IslandObjects'
+import ProximityTracker from './components/scene/ProximityTracker'
 import IntroSequence from './components/intro/IntroSequence'
+import LoadingOverlay from './components/ui/LoadingOverlay'
 import OverlayCard from './components/ui/OverlayCard'
 import CVPopup from './components/ui/CVPopup'
 import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
+import { PROJECTS } from './config/objects'
+import { useInteractKey } from './hooks/useInteractKey'
 import useStore from './store/useStore'
 
-const DARK_SCENE = '#0d1117'
+const DARK_SCENE = '#2b2a38'
 const LIGHT_SCENE = '#f5f0e8'
+const HINT_LABELS = {
+  campfire: '[E] Toggle light',
+  'back-portal': '[E] Return to main island',
+  'projects-door': '[E] Enter projects',
+}
 
 function SceneEnvironment({ isDarkMode, currentIsland }) {
   const [backgroundColor, setBackgroundColor] = useState(isDarkMode ? DARK_SCENE : LIGHT_SCENE)
@@ -58,7 +68,7 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
       <color attach="background" args={[backgroundColor]} />
       <fogExp2
         attach="fog"
-        args={[backgroundColor, isDarkMode ? 0.07 : 0.05]}
+        args={[backgroundColor, isDarkMode ? 0.018 : 0.012]}
       />
       <ambientLight color={ambientColor} intensity={ambientIntensity} />
       <directionalLight
@@ -78,19 +88,51 @@ function SceneFallback() {
 }
 
 export default function App() {
+  useInteractKey()
+
   const currentIsland = useStore((state) => state.currentIsland)
+  const introComplete = useStore((state) => state.introComplete)
   const activeOverlay = useStore((state) => state.activeOverlay)
+  const nearbyObjectId = useStore((state) => state.nearbyObjectId)
   const isDarkMode = useStore((state) => state.isDarkMode)
+  const setSceneReady = useStore((state) => state.setSceneReady)
+
+  const [showIsland, setShowIsland] = useState(false)
+  const [introEnabled, setIntroEnabled] = useState(false)
+
+  useEffect(() => {
+    if (introComplete) {
+      const t = setTimeout(() => setShowIsland(true), 100)
+      return () => clearTimeout(t)
+    }
+  }, [introComplete])
+
+  const activeProject = activeOverlay?.startsWith('project-')
+    ? PROJECTS.find((project) => `project-${project.id}` === activeOverlay)
+    : null
 
   return (
     <div className={`relative h-screen w-screen overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
-      <div className="pointer-events-none fixed left-1/2 top-5 z-30 -translate-x-1/2 text-2xl tracking-widest text-white/85 drop-shadow-lg md:text-3xl" style={{ fontFamily: 'Cinzel, serif' }}>
+      {/* Persistent name — opacity starts at 0; IntroSequence GSAP animates it in and out */}
+      <div
+        id="intro-name"
+        className="pointer-events-none fixed left-1/2 top-8 z-30 -translate-x-1/2 text-2xl tracking-widest text-white/85 drop-shadow-lg md:text-3xl"
+        style={{ fontFamily: 'VincenzoFont, serif', opacity: 0 }}
+      >
         Vincenzo
       </div>
 
+      {nearbyObjectId && !activeOverlay && introComplete ? (
+        <div className="pointer-events-none fixed bottom-8 left-1/2 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-gray-900/90 px-5 py-2 text-sm tracking-wide text-white backdrop-blur-sm transition-opacity duration-200">
+          {HINT_LABELS[nearbyObjectId] ?? '[E] Interact'}
+        </div>
+      ) : null}
+
       <Canvas
         className="h-screen w-screen"
+        style={{ background: DARK_SCENE }}
         shadows
+        onCreated={() => setSceneReady(true)}
         camera={{
           fov: 48,
           near: 0.1,
@@ -98,22 +140,26 @@ export default function App() {
           position: [10, 8, 10],
         }}
       >
-        <Suspense fallback={<SceneFallback />}>
-          <SceneEnvironment isDarkMode={isDarkMode} currentIsland={currentIsland} />
-
-          <IntroSequence />
-          <Character />
-
-          {currentIsland === 'main' ? (
-            <>
-              <MainIsland />
-              <IslandObjects />
-            </>
-          ) : (
-            <ProjectsIsland />
-          )}
-        </Suspense>
+        <CanvasErrorBoundary fallback={null}>
+          <Suspense fallback={<SceneFallback />}>
+            <SceneEnvironment isDarkMode={isDarkMode} currentIsland={currentIsland} />
+            <Character />
+            {introComplete ? <ProximityTracker currentIsland={currentIsland} /> : null}
+            {showIsland && currentIsland === 'main' && (
+              <>
+                <MainIsland />
+                <IslandObjects />
+              </>
+            )}
+            {showIsland && currentIsland === 'projects' && <ProjectsIsland />}
+          </Suspense>
+        </CanvasErrorBoundary>
       </Canvas>
+
+      {/* IntroSequence is a DOM component — must live outside the Canvas */}
+      {introEnabled ? <IntroSequence /> : null}
+
+      <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
 
       {activeOverlay === 'about' ? (
         <OverlayCard title="About">
@@ -140,7 +186,7 @@ export default function App() {
           <p>Exploration zone placeholder. More secrets are coming soon.</p>
         </OverlayCard>
       ) : null}
-      {activeOverlay === 'project-weather-spotify' ? <ProjectCard /> : null}
+      {activeOverlay?.startsWith('project-') ? <ProjectCard project={activeProject} /> : null}
       {activeOverlay === 'cv' ? <CVPopup /> : null}
     </div>
   )

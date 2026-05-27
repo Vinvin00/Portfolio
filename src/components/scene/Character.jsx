@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useAnimations, useGLTF } from '@react-three/drei'
 import { gsap } from 'gsap'
-import { Suspense, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { MODELS } from '../../config/models'
 import { useCharacterControls } from '../../hooks/useCharacterControls'
@@ -16,6 +16,7 @@ const CHARACTER_Y_OFFSET = 0
 const IDLE_CLIP = 'Happy_Idle'
 const WALK_CLIP = 'Walking'
 const FALL_CLIP = 'Falling'
+const ANIMATION_FADE_DURATION = 0.25
 
 const CAMERA_OFFSET = { x: 10, y: 8, z: 10 }
 const SPEED = 3
@@ -47,6 +48,23 @@ function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
   const { scene, animations } = useGLTF(GLB_CHARACTER_URL)
   const { actions } = useAnimations(animations, groupRef)
 
+  const playAnimation = useCallback(
+    (nextAnimation, fadeDuration = ANIMATION_FADE_DURATION) => {
+      if (!actions || !nextAnimation) return
+      if (currentAnimRef.current === nextAnimation) return
+
+      const incomingAction = actions[nextAnimation]
+      if (!incomingAction) return
+
+      const outgoingAction = currentAnimRef.current ? actions[currentAnimRef.current] : null
+      outgoingAction?.fadeOut(fadeDuration)
+
+      incomingAction.reset().fadeIn(fadeDuration).play()
+      currentAnimRef.current = nextAnimation
+    },
+    [actions],
+  )
+
   useEffect(() => {
     if (!actions) return
     console.log('[Character] Available animation clips:', Object.keys(actions))
@@ -62,20 +80,11 @@ function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
         ? IDLE_CLIP
         : Object.keys(actions)[0]
 
-    if (!resolvedClip || currentAnimRef.current === resolvedClip) return
+    if (!resolvedClip) return
 
     console.log('[Character] animation transition:', currentAnimRef.current, '→', resolvedClip, '(introComplete:', introComplete, 'isMoving:', isMoving, ')')
-
-    const incoming = actions[resolvedClip]
-    const outgoing = currentAnimRef.current ? actions[currentAnimRef.current] : null
-
-    if (outgoing) {
-      outgoing.fadeOut(0.25)
-    }
-    incoming?.reset().fadeIn(0.25).play()
-
-    currentAnimRef.current = resolvedClip
-  }, [actions, introComplete, isMoving])
+    playAnimation(resolvedClip, ANIMATION_FADE_DURATION)
+  }, [actions, introComplete, isMoving, playAnimation])
 
   return <primitive object={scene} scale={CHARACTER_SCALE} />
 }
@@ -99,7 +108,7 @@ export default function Character() {
   const playerPosition = useStore((s) => s.playerPosition)
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
 
-  const canMove = introComplete && !isTransitioning && !isFallingRef.current
+  const canMove = introComplete && !isTransitioning && !isFallingVisual
   const direction = useCharacterControls(canMove)
   const isMoving = direction.x !== 0 || direction.z !== 0
 

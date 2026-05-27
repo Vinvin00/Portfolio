@@ -1,11 +1,12 @@
 import { useAnimations, useFBX } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { MODELS } from '../../config/models'
 
 const CHARACTER_SCALE = 0.01
 const IDLE_CLIP = 'Happy_Idle'
 const WALK_CLIP = 'Walking'
+const ANIMATION_FADE_DURATION = 0.25
 
 function stripRootMotion(clip) {
   const cloned = clip.clone()
@@ -63,6 +64,25 @@ export default function CharacterFbx({ isMoving, introComplete, hasDedicatedFall
   const { actions: gameplayActions } = useAnimations(gameplayClips, gameplayCharacter)
   const currentActionRef = useRef(null)
 
+  const playAnimation = useCallback(
+    (nextAnimation, fadeDuration = ANIMATION_FADE_DURATION) => {
+      if (!gameplayActions || !nextAnimation) return
+      if (currentActionRef.current === nextAnimation) return
+
+      const incomingAction = gameplayActions[nextAnimation]
+      if (!incomingAction) return
+
+      const outgoingAction = currentActionRef.current
+        ? gameplayActions[currentActionRef.current]
+        : null
+
+      outgoingAction?.fadeOut(fadeDuration)
+      incomingAction.reset().fadeIn(fadeDuration).play()
+      currentActionRef.current = nextAnimation
+    },
+    [gameplayActions],
+  )
+
   useEffect(() => {
     if (gameplayActions && Object.keys(gameplayActions).length > 0) {
       console.log('[CharacterFbx] Gameplay clips:', Object.keys(gameplayActions))
@@ -79,16 +99,9 @@ export default function CharacterFbx({ isMoving, introComplete, hasDedicatedFall
         : (gameplayActions[IDLE_CLIP] ? IDLE_CLIP : fallback)
       : (gameplayActions[IDLE_CLIP] ? IDLE_CLIP : fallback)
 
-    if (!target || currentActionRef.current === target) return
-
-    const incoming = gameplayActions[target]
-    const outgoing = currentActionRef.current ? gameplayActions[currentActionRef.current] : null
-
-    incoming?.reset().fadeIn(0.2).play()
-    outgoing?.fadeOut(0.2)
-
-    currentActionRef.current = target
-  }, [gameplayActions, introComplete, isMoving])
+    if (!target) return
+    playAnimation(target, ANIMATION_FADE_DURATION)
+  }, [gameplayActions, introComplete, isMoving, playAnimation])
 
   useFrame(() => {
     gameplayCharacter.position.set(0, 0, 0)

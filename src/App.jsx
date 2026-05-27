@@ -97,15 +97,8 @@ export default function App() {
   const isDarkMode = useStore((state) => state.isDarkMode)
   const setSceneReady = useStore((state) => state.setSceneReady)
 
-  const [showIsland, setShowIsland] = useState(false)
   const [introEnabled, setIntroEnabled] = useState(false)
-
-  useEffect(() => {
-    if (introComplete) {
-      const t = setTimeout(() => setShowIsland(true), 100)
-      return () => clearTimeout(t)
-    }
-  }, [introComplete])
+  const showIsland = introEnabled
 
   const activeProject = activeOverlay?.startsWith('project-')
     ? PROJECTS.find((project) => `project-${project.id}` === activeOverlay)

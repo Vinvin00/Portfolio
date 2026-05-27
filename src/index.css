@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
 @import './assets/fonts/GeneralSans_Complete/Fonts/WEB/css/general-sans.css';
 
 @font-face {
@@ -17,12 +18,23 @@
 html,
 body,
 #root {
+  margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
-  margin: 0;
   background: #0d1117;
+  overflow: hidden;
 }
 
 body {
-  font-family: 'GeneralSans-Variable', 'GeneralSans-Regular', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'DM Sans', 'GeneralSans-Variable', 'GeneralSans-Regular', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@keyframes hudFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

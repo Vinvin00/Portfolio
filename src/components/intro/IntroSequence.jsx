@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
+import { ScrambleTextPlugin } from 'gsap/ScrambleTextPlugin'
 import useStore from '../../store/useStore'
 
 const INTRO_START_Y = 12
 const LANDING_Y = 1
+const INTRO_NAME = 'Vincenzo Balbi — Portfolio'
+
+gsap.registerPlugin(ScrambleTextPlugin)
 
 export default function IntroSequence({ introEnabled }) {
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
@@ -14,9 +18,11 @@ export default function IntroSequence({ introEnabled }) {
   const promptRef = useRef(null)
   const promptRevealTweenRef = useRef(null)
   const pulseRef = useRef(null)
+  const nameRevealTweenRef = useRef(null)
   const transitionTimelineRef = useRef(null)
   const introActivatedRef = useRef(false)
   const landingTriggeredRef = useRef(introComplete)
+  const introNameRef = useRef(null)
 
   useEffect(() => {
     if (!introEnabled || introComplete || introActivatedRef.current || !promptRef.current) {
@@ -27,7 +33,25 @@ export default function IntroSequence({ introEnabled }) {
     setIntroLandingStarted(false)
 
     gsap.set(promptRef.current, { opacity: 0 })
-    gsap.set('#intro-name', { opacity: 0.85, letterSpacing: '0.2em', y: 0 })
+    if (introNameRef.current) {
+      introNameRef.current.textContent = ''
+      gsap.set(introNameRef.current, {
+        opacity: 0,
+      })
+      nameRevealTweenRef.current?.kill()
+      nameRevealTweenRef.current = gsap.to(introNameRef.current, {
+        duration: 1.15,
+        opacity: 1,
+        ease: 'none',
+        delay: 1.8,
+        scrambleText: {
+          text: INTRO_NAME,
+          chars: 'upperCase',
+          speed: 0.5,
+          delimiter: '',
+        },
+      })
+    }
 
     promptRevealTweenRef.current = gsap.to(promptRef.current, {
       opacity: 0.6,
@@ -52,7 +76,6 @@ export default function IntroSequence({ introEnabled }) {
       window.removeEventListener('pointerdown', onPointerDown)
       promptRevealTweenRef.current?.kill()
       pulseRef.current?.kill()
-      gsap.set('#intro-name', { opacity: 0 })
       setPlayerPosition({ x: 0, y: INTRO_START_Y, z: 0 })
 
       const landing = { y: INTRO_START_Y }
@@ -62,7 +85,6 @@ export default function IntroSequence({ introEnabled }) {
           onComplete: () => {
             setPlayerPosition({ x: 0, y: LANDING_Y, z: 0 })
             setIntroComplete(true)
-            gsap.set('#intro-name', { opacity: 0 })
           },
         })
         .to(promptRef.current, { opacity: 0, duration: 0.3, ease: 'power2.out' }, 0)
@@ -108,6 +130,7 @@ export default function IntroSequence({ introEnabled }) {
     return () => {
       promptRevealTweenRef.current?.kill()
       pulseRef.current?.kill()
+      nameRevealTweenRef.current?.kill()
       transitionTimelineRef.current?.kill()
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
@@ -116,6 +139,13 @@ export default function IntroSequence({ introEnabled }) {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-40 select-none">
+      <h1
+        ref={introNameRef}
+        className="fixed left-1/2 top-6 z-30 -translate-x-1/2 text-[0.65rem] uppercase tracking-widest text-slate-300/65 md:text-xs"
+        style={{ fontFamily: '"DM Sans", system-ui, sans-serif', fontWeight: 300, opacity: 0 }}
+      >
+        {INTRO_NAME}
+      </h1>
       <div
         ref={promptRef}
         style={{
@@ -123,7 +153,7 @@ export default function IntroSequence({ introEnabled }) {
           bottom: '28%',
           left: '50%',
           transform: 'translateX(-50%)',
-          fontFamily: 'VincenzoFont, serif',
+          fontFamily: '"DM Sans", system-ui, sans-serif',
           fontSize: '0.75rem',
           letterSpacing: '0.25em',
           color: 'rgba(255, 255, 255, 0.55)',

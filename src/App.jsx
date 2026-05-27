@@ -7,23 +7,20 @@ import MainIsland from './components/scene/MainIsland'
 import ProjectsIsland from './components/scene/ProjectsIsland'
 import IslandObjects from './components/scene/IslandObjects'
 import ProximityTracker from './components/scene/ProximityTracker'
+import VantaBackground from './components/scene/VantaBackground'
 import IntroSequence from './components/intro/IntroSequence'
 import LoadingOverlay from './components/ui/LoadingOverlay'
 import OverlayCard from './components/ui/OverlayCard'
 import CVPopup from './components/ui/CVPopup'
 import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
+import HUDBar from './components/ui/HUDBar'
 import { PROJECTS } from './config/objects'
 import { useInteractKey } from './hooks/useInteractKey'
 import useStore from './store/useStore'
 
 const DARK_SCENE = '#2b2a38'
 const LIGHT_SCENE = '#f5f0e8'
-const HINT_LABELS = {
-  campfire: '[E] Toggle light',
-  'back-portal': '[E] Return to main island',
-  'projects-door': '[E] Enter projects',
-}
 
 function SceneEnvironment({ isDarkMode, currentIsland }) {
   const [backgroundColor, setBackgroundColor] = useState(isDarkMode ? DARK_SCENE : LIGHT_SCENE)
@@ -61,11 +58,16 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
     return currentIsland === 'projects' ? '#fff3df' : '#fff6e8'
   }, [currentIsland, isDarkMode])
 
-  const ambientIntensity = currentIsland === 'projects' ? 0.55 : 0.4
+  const ambientIntensity = isDarkMode
+    ? currentIsland === 'projects'
+      ? 0.78
+      : 0.62
+    : currentIsland === 'projects'
+      ? 0.62
+      : 0.46
 
   return (
     <>
-      <color attach="background" args={[backgroundColor]} />
       <fogExp2
         attach="fog"
         args={[backgroundColor, isDarkMode ? 0.018 : 0.012]}
@@ -73,7 +75,7 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
       <ambientLight color={ambientColor} intensity={ambientIntensity} />
       <directionalLight
         position={[-12, 16, 8]}
-        intensity={isDarkMode ? 1.1 : 0.95}
+        intensity={isDarkMode ? 1.18 : 1.02}
         color={isDarkMode ? '#a7b9e2' : '#fff2d8'}
         castShadow
         shadow-mapSize-width={2048}
@@ -106,25 +108,24 @@ export default function App() {
     : null
 
   return (
-    <div className={`relative h-screen w-screen overflow-hidden ${isDarkMode ? 'dark' : ''}`}>
-      {/* Persistent name — opacity starts at 0; IntroSequence GSAP animates it in and out */}
-      <div
-        id="intro-name"
-        className="pointer-events-none fixed left-1/2 top-8 z-30 -translate-x-1/2 text-2xl tracking-widest text-white/85 drop-shadow-lg md:text-3xl"
-        style={{ fontFamily: 'VincenzoFont, serif', opacity: 0 }}
-      >
-        Vincenzo
-      </div>
-
-      {nearbyObjectId && !activeOverlay && introComplete ? (
-        <div className="pointer-events-none fixed bottom-8 left-1/2 z-30 -translate-x-1/2 rounded-full border border-white/10 bg-gray-900/90 px-5 py-2 text-sm tracking-wide text-white backdrop-blur-sm transition-opacity duration-200">
-          {HINT_LABELS[nearbyObjectId] ?? '[E] Interact'}
-        </div>
-      ) : null}
+    <div
+      className={`relative h-screen w-screen overflow-hidden transition-colors duration-[400ms] ${isDarkMode ? 'dark' : ''}`}
+      style={{ fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif' }}
+    >
+      <VantaBackground isDarkMode={isDarkMode} />
 
       <Canvas
         className="h-screen w-screen"
-        style={{ background: '#0d1117' }}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'transparent',
+          zIndex: 1,
+        }}
+        gl={{ alpha: true, antialias: true }}
         shadows
         onCreated={() => setSceneReady(true)}
         camera={{
@@ -154,21 +155,53 @@ export default function App() {
       <IntroSequence introEnabled={introEnabled} />
 
       <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
+      <HUDBar />
 
       {activeOverlay === 'about' ? (
         <OverlayCard title="About">
           <p>
-            <span className="font-semibold text-white">Name:</span> Vincenzo
+            <span
+              style={{
+                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
+                fontWeight: 300,
+              }}
+            >
+              Name:
+            </span>{' '}
+            Vincenzo
           </p>
           <p>
-            <span className="font-semibold text-white">Location:</span> Madrid / Segovia
+            <span
+              style={{
+                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
+                fontWeight: 300,
+              }}
+            >
+              Location:
+            </span>{' '}
+            Madrid / Segovia
           </p>
           <p>
-            <span className="font-semibold text-white">Skills:</span> Python, APIs, automation,
+            <span
+              style={{
+                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
+                fontWeight: 300,
+              }}
+            >
+              Skills:
+            </span>{' '}
+            Python, APIs, automation,
             GitHub Actions, React (beginner)
           </p>
           <p>Developer building cool things.</p>
-          <div className="mt-2 flex h-28 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-xs text-white/70">
+          <div
+            className="mt-2 flex h-28 items-center justify-center rounded-[18px] text-xs"
+            style={{
+              background: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.13)' : '1px solid rgba(0,0,0,0.1)',
+              color: isDarkMode ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.35)',
+            }}
+          >
             Headshot placeholder
           </div>
         </OverlayCard>
@@ -181,7 +214,7 @@ export default function App() {
         </OverlayCard>
       ) : null}
       {activeOverlay?.startsWith('project-') ? <ProjectCard project={activeProject} /> : null}
-      {activeOverlay === 'cv' ? <CVPopup /> : null}
+      {nearbyObjectId === 'cv-stand' && !activeOverlay && introComplete ? <CVPopup /> : null}
     </div>
   )
 }

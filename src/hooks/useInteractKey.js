@@ -9,7 +9,9 @@ import useStore from '../store/useStore'
 const ACTION_MAP = {}
 
 ;[...MAIN_ISLAND_OBJECTS, ...PROJECTS_ISLAND_OBJECTS].forEach((obj) => {
-  ACTION_MAP[obj.id] = obj.action
+  if (obj.action) {
+    ACTION_MAP[obj.id] = obj.action
+  }
 })
 
 PROJECTS.forEach((project) => {

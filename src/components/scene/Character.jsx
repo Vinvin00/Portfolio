@@ -5,7 +5,6 @@ import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { MODELS } from '../../config/models'
 import { useCharacterControls } from '../../hooks/useCharacterControls'
-import { useModelAvailable } from '../../hooks/useModelAvailable'
 import useStore from '../../store/useStore'
 import CanvasErrorBoundary from './CanvasErrorBoundary'
 import CharacterFbx from './CharacterFbx'
@@ -96,10 +95,6 @@ export default function Character() {
   const isFallingRef = useRef(false)
   const [isFallingVisual, setIsFallingVisual] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
-
-  const glbAvailable = useModelAvailable(GLB_CHARACTER_URL)
-  const fbxAvailable = useModelAvailable(MODELS.character)
-  const fallFbxAvailable = useModelAvailable(MODELS.fallAnimation)
 
   const { camera } = useThree()
 
@@ -293,29 +288,39 @@ export default function Character() {
 
   return (
     <group ref={groupRef} castShadow>
-      {glbAvailable ? (
-        <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
-          <Suspense fallback={<CharacterPlaceholder />}>
-            <GlbCharacterModel
-              groupRef={groupRef}
-              isMoving={isMoving}
-              introComplete={introComplete && !isFallingVisual}
-            />
-          </Suspense>
-        </CanvasErrorBoundary>
-      ) : fbxAvailable ? (
-        <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
-          <Suspense fallback={<CharacterPlaceholder />}>
-            <CharacterFbx
-              isMoving={isMoving}
-              introComplete={introComplete && !isFallingVisual}
-              hasDedicatedFall={fallFbxAvailable === true}
-            />
-          </Suspense>
-        </CanvasErrorBoundary>
-      ) : (
-        <CharacterPlaceholder />
-      )}
+      <CanvasErrorBoundary
+        fallback={
+          <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
+            <Suspense fallback={<CharacterPlaceholder />}>
+              <CharacterFbx
+                isMoving={isMoving}
+                introComplete={introComplete && !isFallingVisual}
+                hasDedicatedFall={false}
+              />
+            </Suspense>
+          </CanvasErrorBoundary>
+        }
+      >
+        <Suspense
+          fallback={
+            <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>
+              <Suspense fallback={<CharacterPlaceholder />}>
+                <CharacterFbx
+                  isMoving={isMoving}
+                  introComplete={introComplete && !isFallingVisual}
+                  hasDedicatedFall={false}
+                />
+              </Suspense>
+            </CanvasErrorBoundary>
+          }
+        >
+          <GlbCharacterModel
+            groupRef={groupRef}
+            isMoving={isMoving}
+            introComplete={introComplete && !isFallingVisual}
+          />
+        </Suspense>
+      </CanvasErrorBoundary>
     </group>
   )
 }

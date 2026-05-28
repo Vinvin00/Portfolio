@@ -14,6 +14,7 @@ import OverlayCard from './components/ui/OverlayCard'
 import CVPopup from './components/ui/CVPopup'
 import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
+import ProjectsScreen from './components/scene/ProjectsScreen'
 import HUDBar from './components/ui/HUDBar'
 import { PROJECTS } from './config/objects'
 import { useInteractKey } from './hooks/useInteractKey'
@@ -144,6 +145,7 @@ export default function App() {
               <>
                 <MainIsland />
                 <IslandObjects />
+                <ProjectsScreen />
               </>
             )}
             {showIsland && currentIsland === 'projects' && <ProjectsIsland />}

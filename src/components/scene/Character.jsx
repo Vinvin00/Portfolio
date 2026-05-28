@@ -3,6 +3,7 @@ import { useAnimations, useGLTF } from '@react-three/drei'
 import { gsap } from 'gsap'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { getProjectsViewTargets } from '../../utils/projectsView'
 import { MODELS } from '../../config/models'
 import { useCharacterControls } from '../../hooks/useCharacterControls'
 import useStore from '../../store/useStore'
@@ -121,6 +122,8 @@ export default function Character() {
   const firstIslandRender = useRef(true)
   const fallLoopTimelineRef = useRef(null)
   const isFallingRef = useRef(false)
+  const isZoomedRef = useRef(false)
+  const projectsCameraTweenRef = useRef(null)
   const [isFallingVisual, setIsFallingVisual] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -130,10 +133,80 @@ export default function Character() {
   const introComplete = useStore((s) => s.introComplete)
   const playerPosition = useStore((s) => s.playerPosition)
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
+  const isProjectsScreenOpen = useStore((s) => s.isProjectsScreenOpen)
 
-  const canMove = introComplete && !isTransitioning && !isFallingVisual
+  const canMove = introComplete && !isTransitioning && !isFallingVisual && !isProjectsScreenOpen
   const direction = useCharacterControls(canMove)
   const isMoving = direction.x !== 0 || direction.z !== 0
+
+  useEffect(() => {
+    const getFollowTarget = () => {
+      const { playerPosition: pos } = useStore.getState()
+      return {
+        x: pos.x + CAMERA_OFFSET.x,
+        y: pos.y + CAMERA_OFFSET.y,
+        z: pos.z + CAMERA_OFFSET.z,
+      }
+    }
+
+    projectsCameraTweenRef.current?.kill()
+
+    if (isProjectsScreenOpen) {
+      isZoomedRef.current = true
+
+      const p = useStore.getState().playerPosition
+      const { lookAtTarget, targetCamPos } = getProjectsViewTargets(p, CAMERA_OFFSET)
+
+      const lookDir = new THREE.Vector3()
+      camera.getWorldDirection(lookDir)
+      const lookAtCurrent = camera.position.clone().addScaledVector(lookDir, 10)
+
+      projectsCameraTweenRef.current = gsap.to(camera.position, {
+        x: targetCamPos.x,
+        y: targetCamPos.y,
+        z: targetCamPos.z,
+        duration: 0.9,
+        ease: 'power2.inOut',
+        onUpdate: () => {
+          lookAtCurrent.lerp(lookAtTarget, 0.38)
+          camera.up.set(0, 1, 0)
+          camera.lookAt(lookAtCurrent)
+        },
+        onComplete: () => {
+          camera.position.copy(targetCamPos)
+          camera.up.set(0, 1, 0)
+          camera.lookAt(lookAtTarget)
+        },
+      })
+
+      return () => {
+        projectsCameraTweenRef.current?.kill()
+      }
+    }
+
+    const followTarget = getFollowTarget()
+    const lookAtTarget = new THREE.Vector3()
+
+    projectsCameraTweenRef.current = gsap.to(camera.position, {
+      x: followTarget.x,
+      y: followTarget.y,
+      z: followTarget.z,
+      duration: 0.7,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        const p = useStore.getState().playerPosition
+        lookAtTarget.set(p.x, p.y, p.z)
+        camera.lookAt(lookAtTarget)
+      },
+      onComplete: () => {
+        isZoomedRef.current = false
+      },
+    })
+
+    return () => {
+      projectsCameraTweenRef.current?.kill()
+    }
+  }, [camera, isProjectsScreenOpen])
 
   const triggerFallLoop = (fallStartPosition, moveDirection) => {
     if (isFallingRef.current || isTransitioning || !introComplete) return
@@ -290,7 +363,7 @@ export default function Character() {
       )
     }
 
-    if (!isFallingRef.current) {
+    if (!isFallingRef.current && !isZoomedRef.current) {
       const target = new THREE.Vector3(
         playerPosition.x + CAMERA_OFFSET.x,
         playerPosition.y + CAMERA_OFFSET.y,
@@ -298,7 +371,7 @@ export default function Character() {
       )
       camera.position.lerp(target, 0.08)
       camera.lookAt(playerPosition.x, playerPosition.y, playerPosition.z)
-    } else {
+    } else if (isFallingRef.current && !isZoomedRef.current) {
       const lockedTarget = new THREE.Vector3(CAMERA_OFFSET.x, CAMERA_OFFSET.y, CAMERA_OFFSET.z)
       camera.position.lerp(lockedTarget, 0.12)
       camera.lookAt(0, FALL_CAMERA_LOOK_AT_Y, 0)
@@ -310,12 +383,13 @@ export default function Character() {
   useEffect(
     () => () => {
       fallLoopTimelineRef.current?.kill()
+      projectsCameraTweenRef.current?.kill()
     },
     [],
   )
 
   return (
-    <group ref={groupRef} castShadow>
+    <group ref={groupRef} castShadow visible={!isProjectsScreenOpen}>
       <CanvasErrorBoundary
         fallback={
           <CanvasErrorBoundary fallback={<CharacterPlaceholder />}>

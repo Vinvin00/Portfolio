@@ -24,15 +24,28 @@ export function useInteractKey() {
       const {
         nearbyObjectId,
         activeOverlay,
+        isProjectsScreenOpen,
         introComplete,
         isRespawning,
         isDarkMode,
         setActiveOverlay,
         setCurrentIsland,
         setIsDarkMode,
+        setIsProjectsScreenOpen,
       } = useStore.getState()
 
-      if (e.code === 'Escape' || (e.code === 'KeyE' && activeOverlay !== null)) {
+      if (e.code === 'Escape') {
+        setActiveOverlay(null)
+        if (isProjectsScreenOpen) setIsProjectsScreenOpen(false)
+        return
+      }
+
+      if (e.code === 'KeyE' && isProjectsScreenOpen) {
+        setIsProjectsScreenOpen(false)
+        return
+      }
+
+      if (e.code === 'KeyE' && activeOverlay !== null) {
         setActiveOverlay(null)
         return
       }
@@ -48,6 +61,10 @@ export function useInteractKey() {
           case 'teleport':
             setActiveOverlay(null)
             setCurrentIsland(action.value)
+            break
+          case 'projectsScreen':
+            setActiveOverlay(null)
+            setIsProjectsScreenOpen(true)
             break
           case 'toggleDarkMode':
             setIsDarkMode(!isDarkMode)

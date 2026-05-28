@@ -17,7 +17,7 @@ function stripRootMotion(clip) {
   return cloned
 }
 
-function FallingRig({ visible }) {
+export function FallingRig({ visible }) {
   const fallCharacter = useFBX(MODELS.fallAnimation)
   const { actions: fallActions } = useAnimations(fallCharacter.animations ?? [], fallCharacter)
 
@@ -34,7 +34,8 @@ function FallingRig({ visible }) {
   return <primitive object={fallCharacter} scale={CHARACTER_SCALE} visible={visible} />
 }
 
-export default function CharacterFbx({ isMoving, introComplete, hasDedicatedFall }) {
+export default function CharacterFbx({ isMoving, introComplete }) {
+  const needsIdleOnLandRef = useRef(false)
   const gameplayCharacter = useFBX(MODELS.character)
   const idleSource = useFBX(MODELS.idleAnimation)
   const walkSource = useFBX(MODELS.walkAnimation)
@@ -63,6 +64,7 @@ export default function CharacterFbx({ isMoving, introComplete, hasDedicatedFall
 
   const { actions: gameplayActions } = useAnimations(gameplayClips, gameplayCharacter)
   const currentActionRef = useRef(null)
+  const gameplayActionCount = gameplayActions ? Object.keys(gameplayActions).length : 0
 
   const playAnimation = useCallback(
     (nextAnimation, fadeDuration = ANIMATION_FADE_DURATION) => {
@@ -90,31 +92,45 @@ export default function CharacterFbx({ isMoving, introComplete, hasDedicatedFall
   }, [gameplayActions])
 
   useEffect(() => {
-    if (!gameplayActions || Object.keys(gameplayActions).length === 0) return
+    if (!introComplete) {
+      currentActionRef.current = null
+      needsIdleOnLandRef.current = false
+      return
+    }
+    needsIdleOnLandRef.current = true
+  }, [introComplete])
+
+  useEffect(() => {
+    if (!introComplete) return
+    if (!gameplayActions || gameplayActionCount === 0) return
 
     const fallback = Object.keys(gameplayActions)[0]
-    const target = introComplete
-      ? isMoving
-        ? (gameplayActions[WALK_CLIP] ? WALK_CLIP : fallback)
-        : (gameplayActions[IDLE_CLIP] ? IDLE_CLIP : fallback)
+    const target = isMoving
+      ? (gameplayActions[WALK_CLIP] ? WALK_CLIP : fallback)
       : (gameplayActions[IDLE_CLIP] ? IDLE_CLIP : fallback)
 
     if (!target) return
     playAnimation(target, ANIMATION_FADE_DURATION)
-  }, [gameplayActions, introComplete, isMoving, playAnimation])
+    if (!isMoving && target === IDLE_CLIP) {
+      needsIdleOnLandRef.current = false
+    }
+  }, [gameplayActionCount, gameplayActions, introComplete, isMoving, playAnimation])
 
   useFrame(() => {
+    if (needsIdleOnLandRef.current && introComplete && !isMoving && gameplayActions?.[IDLE_CLIP]) {
+      currentActionRef.current = null
+      playAnimation(IDLE_CLIP, ANIMATION_FADE_DURATION)
+      needsIdleOnLandRef.current = false
+    }
+
     gameplayCharacter.position.set(0, 0, 0)
     gameplayCharacter.rotation.set(0, 0, 0)
   })
 
-  const showFallModel = !introComplete && hasDedicatedFall
-  const showGameplayModel = introComplete || !hasDedicatedFall
-
   return (
     <group>
-      {hasDedicatedFall ? <FallingRig visible={showFallModel} /> : null}
-      <primitive object={gameplayCharacter} scale={CHARACTER_SCALE} visible={showGameplayModel} />
+      {!introComplete ? <FallingRig visible /> : null}
+      <primitive object={gameplayCharacter} scale={CHARACTER_SCALE} visible={introComplete} />
     </group>
   )
 }

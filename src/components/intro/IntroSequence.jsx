@@ -9,6 +9,10 @@ const INTRO_NAME = 'Vincenzo Balbi — Portfolio'
 
 gsap.registerPlugin(ScrambleTextPlugin)
 
+function finalizeIntroName(el) {
+  if (el) el.textContent = INTRO_NAME
+}
+
 export default function IntroSequence({ introEnabled }) {
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
   const setIntroComplete = useStore((s) => s.setIntroComplete)
@@ -33,13 +37,13 @@ export default function IntroSequence({ introEnabled }) {
     setIntroLandingStarted(false)
 
     gsap.set(promptRef.current, { opacity: 0 })
-    if (introNameRef.current) {
-      introNameRef.current.textContent = ''
-      gsap.set(introNameRef.current, {
-        opacity: 0,
-      })
+    const nameEl = introNameRef.current
+    if (nameEl) {
+      nameEl.textContent = ''
+      gsap.set(nameEl, { opacity: 0 })
       nameRevealTweenRef.current?.kill()
-      nameRevealTweenRef.current = gsap.to(introNameRef.current, {
+      const onNameSettled = () => finalizeIntroName(nameEl)
+      nameRevealTweenRef.current = gsap.to(nameEl, {
         duration: 1.15,
         opacity: 1,
         ease: 'none',
@@ -50,6 +54,8 @@ export default function IntroSequence({ introEnabled }) {
           speed: 0.5,
           delimiter: '',
         },
+        onComplete: onNameSettled,
+        onInterrupt: onNameSettled,
       })
     }
 
@@ -71,6 +77,8 @@ export default function IntroSequence({ introEnabled }) {
       if (landingTriggeredRef.current) return
       landingTriggeredRef.current = true
       setIntroLandingStarted(true)
+      finalizeIntroName(introNameRef.current)
+      nameRevealTweenRef.current?.kill()
 
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
@@ -130,10 +138,14 @@ export default function IntroSequence({ introEnabled }) {
     return () => {
       promptRevealTweenRef.current?.kill()
       pulseRef.current?.kill()
+      finalizeIntroName(introNameRef.current)
       nameRevealTweenRef.current?.kill()
       transitionTimelineRef.current?.kill()
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
+      if (!landingTriggeredRef.current) {
+        introActivatedRef.current = false
+      }
     }
   }, [introComplete, introEnabled, setIntroComplete, setIntroLandingStarted, setPlayerPosition])
 
@@ -141,11 +153,10 @@ export default function IntroSequence({ introEnabled }) {
     <div className="pointer-events-none fixed inset-0 z-40 select-none">
       <h1
         ref={introNameRef}
+        aria-label={INTRO_NAME}
         className="fixed left-1/2 top-6 z-30 -translate-x-1/2 text-[0.65rem] uppercase tracking-widest text-slate-300/65 md:text-xs"
         style={{ fontFamily: '"DM Sans", system-ui, sans-serif', fontWeight: 300, opacity: 0 }}
-      >
-        {INTRO_NAME}
-      </h1>
+      />
       <div
         ref={promptRef}
         style={{

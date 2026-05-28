@@ -7,14 +7,13 @@ import { MODELS } from '../../config/models'
 import { useCharacterControls } from '../../hooks/useCharacterControls'
 import useStore from '../../store/useStore'
 import CanvasErrorBoundary from './CanvasErrorBoundary'
-import CharacterFbx from './CharacterFbx'
+import CharacterFbx, { FallingRig } from './CharacterFbx'
 
 const GLB_CHARACTER_URL = '/models/character.glb'
 const CHARACTER_SCALE = 0.01
 const CHARACTER_Y_OFFSET = 0
 const IDLE_CLIP = 'Happy_Idle'
 const WALK_CLIP = 'Walking'
-const FALL_CLIP = 'Falling'
 const ANIMATION_FADE_DURATION = 0.25
 
 const CAMERA_OFFSET = { x: 10, y: 8, z: 10 }
@@ -44,8 +43,10 @@ function CharacterPlaceholder() {
 
 function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
   const currentAnimRef = useRef(null)
+  const needsIdleOnLandRef = useRef(false)
   const { scene, animations } = useGLTF(GLB_CHARACTER_URL)
   const { actions } = useAnimations(animations, groupRef)
+  const actionCount = actions ? Object.keys(actions).length : 0
 
   const playAnimation = useCallback(
     (nextAnimation, fadeDuration = ANIMATION_FADE_DURATION) => {
@@ -70,9 +71,19 @@ function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
   }, [actions])
 
   useEffect(() => {
-    if (!actions || Object.keys(actions).length === 0) return
+    if (!introComplete) {
+      currentAnimRef.current = null
+      needsIdleOnLandRef.current = false
+      return
+    }
+    needsIdleOnLandRef.current = true
+  }, [introComplete])
 
-    const targetClip = !introComplete ? FALL_CLIP : isMoving ? WALK_CLIP : IDLE_CLIP
+  useEffect(() => {
+    if (!introComplete) return
+    if (!actions || actionCount === 0) return
+
+    const targetClip = isMoving ? WALK_CLIP : IDLE_CLIP
     const resolvedClip = actions[targetClip]
       ? targetClip
       : actions[IDLE_CLIP]
@@ -83,9 +94,26 @@ function GlbCharacterModel({ groupRef, isMoving, introComplete }) {
 
     console.log('[Character] animation transition:', currentAnimRef.current, '→', resolvedClip, '(introComplete:', introComplete, 'isMoving:', isMoving, ')')
     playAnimation(resolvedClip, ANIMATION_FADE_DURATION)
-  }, [actions, introComplete, isMoving, playAnimation])
+    if (!isMoving && resolvedClip === IDLE_CLIP) {
+      needsIdleOnLandRef.current = false
+    }
+  }, [actionCount, actions, introComplete, isMoving, playAnimation])
 
-  return <primitive object={scene} scale={CHARACTER_SCALE} />
+  useFrame(() => {
+    if (!needsIdleOnLandRef.current || !introComplete || isMoving) return
+    if (!actions?.[IDLE_CLIP]) return
+
+    currentAnimRef.current = null
+    playAnimation(IDLE_CLIP, ANIMATION_FADE_DURATION)
+    needsIdleOnLandRef.current = false
+  })
+
+  return (
+    <>
+      {!introComplete ? <FallingRig visible /> : null}
+      <primitive object={scene} scale={CHARACTER_SCALE} visible={introComplete} />
+    </>
+  )
 }
 
 export default function Character() {
@@ -295,7 +323,6 @@ export default function Character() {
               <CharacterFbx
                 isMoving={isMoving}
                 introComplete={introComplete && !isFallingVisual}
-                hasDedicatedFall={false}
               />
             </Suspense>
           </CanvasErrorBoundary>
@@ -308,7 +335,6 @@ export default function Character() {
                 <CharacterFbx
                   isMoving={isMoving}
                   introComplete={introComplete && !isFallingVisual}
-                  hasDedicatedFall={false}
                 />
               </Suspense>
             </CanvasErrorBoundary>

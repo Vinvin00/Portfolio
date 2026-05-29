@@ -6,7 +6,6 @@ const useStore = create((set) => ({
   nearbyObjectId: null,
   isProjectsScreenOpen: false,
   monitorFocused: false,
-  monitorCameraLocked: false,
   monitorScreenReady: false,
   monitorIframeVisible: false,
   isDarkMode: true,
@@ -22,7 +21,6 @@ const useStore = create((set) => ({
       ...(currentIsland !== 'projects'
         ? {
             monitorFocused: false,
-            monitorCameraLocked: false,
             monitorScreenReady: false,
             monitorIframeVisible: false,
           }
@@ -30,9 +28,17 @@ const useStore = create((set) => ({
     }),
   setActiveOverlay: (activeOverlay) => set({ activeOverlay }),
   setNearbyObjectId: (nearbyObjectId) => set({ nearbyObjectId }),
-  setIsProjectsScreenOpen: (isProjectsScreenOpen) => set({ isProjectsScreenOpen }),
+  setIsProjectsScreenOpen: (isProjectsScreenOpen) =>
+    set({
+      isProjectsScreenOpen,
+      ...(!isProjectsScreenOpen
+        ? {
+            monitorFocused: false,
+            monitorIframeVisible: false,
+          }
+        : {}),
+    }),
   setMonitorFocused: (monitorFocused) => set({ monitorFocused }),
-  setMonitorCameraLocked: (monitorCameraLocked) => set({ monitorCameraLocked }),
   setMonitorScreenReady: (monitorScreenReady) => set({ monitorScreenReady }),
   setMonitorIframeVisible: (monitorIframeVisible) => set({ monitorIframeVisible }),
   setIsDarkMode: (isDarkMode) => set({ isDarkMode }),

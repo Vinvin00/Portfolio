@@ -75,16 +75,6 @@ export const MAIN_ISLAND_OBJECTS = [
     proximityThreshold: 2,
   },
   {
-    id: 'projects-view-portal',
-    label: 'Projects View',
-    position: { x: -5.4, y: 0, z: 0.2 },
-    model: null,
-    placeholderColor: '#3d6ea5',
-    placeholderGeometry: 'torus',
-    action: { type: 'teleport', value: 'projects' },
-    proximityThreshold: 2,
-  },
-  {
     id: 'exploration-door',
     label: 'Explore',
     position: { x: 4.4, y: 0, z: -4.4 },

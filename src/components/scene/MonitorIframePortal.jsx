@@ -19,7 +19,7 @@ const cornerBuffer = [
 export default function MonitorIframePortal() {
   const monitorFocused = useStore((s) => s.monitorFocused)
   const monitorIframeVisible = useStore((s) => s.monitorIframeVisible)
-  const currentIsland = useStore((s) => s.currentIsland)
+  const isProjectsScreenOpen = useStore((s) => s.isProjectsScreenOpen)
 
   const wrapperRef = useRef(null)
   const iframeRef = useRef(null)
@@ -50,7 +50,7 @@ export default function MonitorIframePortal() {
     const wrapper = wrapperRef.current
     if (!wrapper) return
 
-    const show = currentIsland === 'projects' && monitorFocused && monitorIframeVisible
+    const show = isProjectsScreenOpen && monitorFocused && monitorIframeVisible
     const monitor = projectsMonitorMeshRef.current
 
     if (!show || !monitor) {
@@ -61,6 +61,22 @@ export default function MonitorIframePortal() {
 
     getMonitorScreenCorners(monitor, cornerBuffer)
     const rect = cornersToViewportRect(cornerBuffer, camera, gl.domElement)
+
+    const canvasRect = gl.domElement.getBoundingClientRect()
+    const maxW = canvasRect.width * 0.85
+    const maxH = canvasRect.height * 0.85
+    if (
+      !Number.isFinite(rect.width) ||
+      !Number.isFinite(rect.height) ||
+      rect.width < 8 ||
+      rect.height < 8 ||
+      rect.width > maxW ||
+      rect.height > maxH
+    ) {
+      wrapper.style.opacity = '0'
+      wrapper.style.pointerEvents = 'none'
+      return
+    }
 
     wrapper.style.position = 'fixed'
     wrapper.style.left = `${rect.left}px`
@@ -79,7 +95,7 @@ export default function MonitorIframePortal() {
     opacityRef.current = 1
   })
 
-  if (currentIsland !== 'projects') return null
+  if (!isProjectsScreenOpen) return null
 
   return createPortal(
     <div ref={wrapperRef} style={{ opacity: 0, pointerEvents: 'none' }}>

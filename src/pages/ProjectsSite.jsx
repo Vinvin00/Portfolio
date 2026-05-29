@@ -17,7 +17,7 @@ export default function ProjectsSite() {
         {PROJECTS.map((project) => (
           <article
             key={project.id}
-            className="flex min-h-0 flex-col rounded-md border border-white/10 bg-white/[0.04] p-2.5 transition hover:scale-[1.02] hover:border-sky-400/40 hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]"
+            className="flex min-h-0 flex-col border border-white/10 bg-white/[0.04] p-2.5 transition hover:scale-[1.02] hover:border-sky-400/40 hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]"
           >
             <h2 className="truncate text-xs font-semibold text-slate-100">{project.name}</h2>
             <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-slate-400">
@@ -27,7 +27,7 @@ export default function ProjectsSite() {
               {project.tech?.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded bg-white/10 px-1.5 py-0.5 text-[9px] text-slate-300"
+                  className="bg-white/10 px-1.5 py-0.5 text-[9px] text-slate-300"
                 >
                   {tag}
                 </span>

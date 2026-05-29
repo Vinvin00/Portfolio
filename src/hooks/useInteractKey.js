@@ -4,7 +4,6 @@ import {
   PROJECTS,
   PROJECTS_ISLAND_OBJECTS,
 } from '../config/objects'
-import { requestExitMonitorFocus } from '../utils/projectsMonitorEvents'
 import useStore from '../store/useStore'
 
 const ACTION_MAP = {}
@@ -36,13 +35,11 @@ export function useInteractKey() {
       } = useStore.getState()
 
       if (e.code === 'Escape') {
-        const { monitorFocused, currentIsland } = useStore.getState()
-        if (currentIsland === 'projects' && monitorFocused) {
-          requestExitMonitorFocus()
+        if (isProjectsScreenOpen) {
+          setIsProjectsScreenOpen(false)
           return
         }
         setActiveOverlay(null)
-        if (isProjectsScreenOpen) setIsProjectsScreenOpen(false)
         return
       }
 

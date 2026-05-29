@@ -1,3 +1,5 @@
+import useStore from '../store/useStore'
+
 export function requestExitMonitorFocus() {
-  window.dispatchEvent(new Event('projects-monitor-exit'))
+  useStore.getState().setIsProjectsScreenOpen(false)
 }

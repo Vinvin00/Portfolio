@@ -15,8 +15,8 @@ import CVPopup from './components/ui/CVPopup'
 import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
 import ProjectsScreen from './components/scene/ProjectsScreen'
+import ProjectsCameraController from './components/scene/ProjectsCameraController'
 import HUDBar from './components/ui/HUDBar'
-import MonitorBackButton from './components/ui/MonitorBackButton'
 import { PROJECTS } from './config/objects'
 import { useInteractKey } from './hooks/useInteractKey'
 import useStore from './store/useStore'
@@ -101,6 +101,11 @@ function SceneFallback() {
 export default function App() {
   useInteractKey()
 
+  // Remove stale iframe portals from earlier broken builds
+  useEffect(() => {
+    document.querySelectorAll('[data-monitor-iframe-root]').forEach((el) => el.remove())
+  }, [])
+
   const currentIsland = useStore((state) => state.currentIsland)
   const introComplete = useStore((state) => state.introComplete)
   const introLandingStarted = useStore((state) => state.introLandingStarted)
@@ -148,6 +153,7 @@ export default function App() {
           <Suspense fallback={<SceneFallback />}>
             <SceneEnvironment isDarkMode={isDarkMode} currentIsland={currentIsland} />
             <Character />
+            <ProjectsCameraController />
             {introComplete ? <ProximityTracker currentIsland={currentIsland} /> : null}
             {showIsland && currentIsland === 'main' && (
               <>
@@ -166,8 +172,6 @@ export default function App() {
 
       <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
       <HUDBar />
-      <MonitorBackButton />
-
       {activeOverlay === 'about' ? (
         <OverlayCard title="About">
           <p>

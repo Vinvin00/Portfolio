@@ -16,6 +16,7 @@ import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
 import ProjectsScreen from './components/scene/ProjectsScreen'
 import HUDBar from './components/ui/HUDBar'
+import MonitorBackButton from './components/ui/MonitorBackButton'
 import { PROJECTS } from './config/objects'
 import { useInteractKey } from './hooks/useInteractKey'
 import useStore from './store/useStore'
@@ -165,6 +166,7 @@ export default function App() {
 
       <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
       <HUDBar />
+      <MonitorBackButton />
 
       {activeOverlay === 'about' ? (
         <OverlayCard title="About">

@@ -134,8 +134,16 @@ export default function Character() {
   const playerPosition = useStore((s) => s.playerPosition)
   const setPlayerPosition = useStore((s) => s.setPlayerPosition)
   const isProjectsScreenOpen = useStore((s) => s.isProjectsScreenOpen)
+  const monitorFocused = useStore((s) => s.monitorFocused)
+  const monitorCameraLocked = useStore((s) => s.monitorCameraLocked)
 
-  const canMove = introComplete && !isTransitioning && !isFallingVisual && !isProjectsScreenOpen
+  const canMove =
+    introComplete &&
+    !isTransitioning &&
+    !isFallingVisual &&
+    !isProjectsScreenOpen &&
+    !monitorFocused &&
+    !monitorCameraLocked
   const direction = useCharacterControls(canMove)
   const isMoving = direction.x !== 0 || direction.z !== 0
 
@@ -399,7 +407,10 @@ export default function Character() {
       )
     }
 
-    if (!isFallingRef.current && !isZoomedRef.current) {
+    const cameraLocked =
+      monitorFocused || monitorCameraLocked || isZoomedRef.current
+
+    if (!isFallingRef.current && !cameraLocked) {
       const target = new THREE.Vector3(
         playerPosition.x + CAMERA_OFFSET.x,
         playerPosition.y + CAMERA_OFFSET.y,
@@ -407,7 +418,7 @@ export default function Character() {
       )
       camera.position.lerp(target, 0.08)
       camera.lookAt(playerPosition.x, playerPosition.y, playerPosition.z)
-    } else if (isFallingRef.current && !isZoomedRef.current) {
+    } else if (isFallingRef.current && !cameraLocked) {
       const lockedTarget = new THREE.Vector3(CAMERA_OFFSET.x, CAMERA_OFFSET.y, CAMERA_OFFSET.z)
       camera.position.lerp(lockedTarget, 0.12)
       camera.lookAt(0, FALL_CAMERA_LOOK_AT_Y, 0)

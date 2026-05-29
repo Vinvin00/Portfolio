@@ -1,4 +1,7 @@
 import { PROJECTS, PROJECTS_ISLAND_OBJECTS } from '../../config/objects'
+import ProjectsDesk from './ProjectsDesk'
+import ProjectsMonitorCamera from './ProjectsMonitorCamera'
+import MonitorIframePortal from './MonitorIframePortal'
 import SceneObject from './SceneObject'
 
 export default function ProjectsIsland() {
@@ -13,6 +16,10 @@ export default function ProjectsIsland() {
         <cylinderGeometry args={[1, 1.1, 4, 32]} />
         <meshStandardMaterial color="#2a2f38" />
       </mesh>
+
+      <ProjectsDesk />
+      <ProjectsMonitorCamera />
+      <MonitorIframePortal />
 
       {PROJECTS_ISLAND_OBJECTS.map((obj) => (
         <SceneObject key={obj.id} config={obj} />

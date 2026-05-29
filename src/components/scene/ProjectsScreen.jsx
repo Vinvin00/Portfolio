@@ -5,23 +5,59 @@ import { PROJECTS } from '../../config/objects'
 import { getProjectsLookAtTarget } from '../../utils/projectsView'
 import useStore from '../../store/useStore'
 
-/** Wait until camera zoom is mostly done (tween is 0.9s in Character.jsx). */
-const APPEAR_DELAY_MS = 720
+/** Wait until camera zoom is mostly done (tween is 1.0s in Character.jsx). */
+const APPEAR_DELAY_MS = 800
 const LOADING_DURATION_MS = 480
+const PANEL_WIDTH = Math.round(328 * 1.1 * 0.97)
+const PANEL_HEIGHT_SCALE = 1.05 * 1.1 * 1.03 * 1.03
+/** Bottom taper inset (% per side). */
+const PANEL_TAPER_INSET = 4
+/** Top-left X inset from the left edge (%). */
+const PANEL_TOP_LEFT_INSET = 1
+/** Top-right X inset from the right edge (%). */
+const PANEL_TOP_RIGHT_INSET = 1
+/** How much lower (%) the top-right Y is vs top-left (0%). Increase to drop the corner. */
+const PANEL_TOP_RIGHT_Y = 2.75
+/** Bottom-left X (% from left edge). */
+const PANEL_BOTTOM_LEFT_X = 3
+/** How far (%) the bottom-left hangs below the bottom-right anchor. */
+const PANEL_BOTTOM_LEFT_DROP = 1.5
+/** How far (%) to move the bottom-right corner down from its anchor. */
+const PANEL_BOTTOM_RIGHT_DROP = 2
+const PANEL_EST_HEIGHT = 300
+const panelHeightPx = Math.round(PANEL_EST_HEIGHT * PANEL_HEIGHT_SCALE)
+const panelBottomDropPx = Math.max(1, Math.round(panelHeightPx * PANEL_BOTTOM_LEFT_DROP / 100))
+const panelBottomRightDropPx = Math.max(1, Math.round(panelHeightPx * PANEL_BOTTOM_RIGHT_DROP / 100))
+const panelPaddingBottomPx = panelBottomDropPx + Math.max(0, panelBottomRightDropPx - panelBottomDropPx)
+const panelBottomRightOffsetPx = panelBottomDropPx - panelBottomRightDropPx
+const panelBottomRightY =
+  panelBottomRightOffsetPx > 0 ? `calc(100% - ${panelBottomRightOffsetPx}px)` : '100%'
+const PANEL_OFFSET_X = '2.5%'
+const PANEL_OFFSET_Y = '-8.5%'
+const panelV = (px) => Math.round(px * PANEL_HEIGHT_SCALE)
 
-const frameStyle = {
+const frameWrapperStyle = {
+  overflow: 'visible',
+  filter: 'drop-shadow(0 0 40px rgba(0, 0, 0, 0.8))',
+}
+
+const frameClipStyle = {
   background: '#1a1a1a',
-  borderRadius: '10px',
-  padding: '6px',
-  boxShadow: '0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
+  clipPath: `polygon(${PANEL_TOP_LEFT_INSET}% 0%, ${100 - PANEL_TOP_RIGHT_INSET}% ${PANEL_TOP_RIGHT_Y}%, ${100 - PANEL_TAPER_INSET}% ${panelBottomRightY}, ${PANEL_BOTTOM_LEFT_X}% 100%)`,
+  paddingBottom: `${panelPaddingBottomPx}px`,
+  boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.06)',
   fontFamily: 'monospace',
+}
+
+const frameInnerStyle = {
+  padding: `${panelV(6)}px 8px`,
 }
 
 const screenStyle = {
   background: '#0d1117',
   borderRadius: '6px',
-  padding: '8px',
-  minHeight: '120px',
+  padding: `${panelV(8)}px 10px`,
+  minHeight: `${panelV(Math.round(120 * 1.05))}px`,
   border: '1px solid rgba(255, 255, 255, 0.08)',
 }
 
@@ -29,13 +65,13 @@ const topBarStyle = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginBottom: '6px',
+  marginBottom: `${panelV(6)}px`,
 }
 
 const closeButtonStyle = {
-  marginTop: '10px',
+  marginTop: `${panelV(10)}px`,
   width: '100%',
-  padding: '5px',
+  padding: `${panelV(5)}px 5px`,
   background: 'rgba(255, 255, 255, 0.05)',
   border: '1px solid rgba(255, 255, 255, 0.1)',
   borderRadius: '6px',
@@ -156,7 +192,13 @@ export default function ProjectsScreen() {
         sprite
         distanceFactor={1.35}
         zIndexRange={[100, 0]}
-        style={{ width: '260px', pointerEvents: phase === 'content' ? 'auto' : 'none' }}
+        style={{
+          width: `${PANEL_WIDTH}px`,
+          overflow: 'visible',
+          transform: `translate(${PANEL_OFFSET_X}, ${PANEL_OFFSET_Y})`,
+          transformOrigin: 'bottom left',
+          pointerEvents: phase === 'content' ? 'auto' : 'none',
+        }}
       >
         <style>
           {`
@@ -172,7 +214,9 @@ export default function ProjectsScreen() {
             }
           `}
         </style>
-        <div style={frameStyle}>
+        <div style={frameWrapperStyle}>
+          <div style={frameClipStyle}>
+          <div style={frameInnerStyle}>
           <div style={topBarStyle}>
             <span style={{ fontSize: '9px', color: '#555' }}>VB-01</span>
             <span
@@ -197,7 +241,7 @@ export default function ProjectsScreen() {
                         style={{
                           height: '1px',
                           background: 'rgba(255, 255, 255, 0.05)',
-                          margin: '10px 0',
+                          margin: `${panelV(10)}px 0`,
                         }}
                       />
                     ) : null}
@@ -255,6 +299,8 @@ export default function ProjectsScreen() {
               </div>
             </div>
           )}
+          </div>
+          </div>
         </div>
       </Html>
     </group>

@@ -2,10 +2,16 @@ import * as THREE from 'three'
 import { MAIN_ISLAND_OBJECTS } from '../config/objects'
 
 export const PROJECTS_VIEW = {
-  eyeHeight: 0.96,
-  lookPitchUp: 0.58,
+  /** Horizontal orbit pivot on the desk (from model origin). */
+  focusHeight: 1.19,
+  /** Orbital camera height (from model origin). */
+  orbitHeight: 1.72,
+  /** Small vertical nudge after orbit framing; look-at shifts with camera by the same amount. */
+  camHeightOffset: 0,
+  /** Look-at target sits this far above the orbit pivot (screen center). */
+  lookAtHeight: 0.36,
   yawOffset: -0.2,
-  camDist: 1.05,
+  camDist: 1.28,
   positionBlend: 0.9,
   lookRightOffset: -0.65,
 }
@@ -33,62 +39,75 @@ export function getProjectsDeskConfig() {
   return { modelX, modelY, modelZ, deskFaceDir }
 }
 
-/** Same look-at target the projects camera tween uses (independent of player position). */
-export function getProjectsLookAtTarget() {
-  const { modelX, modelY, modelZ, deskFaceDir } = getProjectsDeskConfig()
-  const { eyeHeight, lookPitchUp, yawOffset, camDist, lookRightOffset } = PROJECTS_VIEW
+function buildProjectsCameraFrame(cameraY, focusY, baseCameraY) {
+  const { modelX, modelZ, deskFaceDir } = getProjectsDeskConfig()
+  const { lookAtHeight, yawOffset, camDist, lookRightOffset } = PROJECTS_VIEW
 
-  const eyeY = modelY + eyeHeight
-  const focus = new THREE.Vector3(modelX, eyeY, modelZ)
+  const focus = new THREE.Vector3(modelX, focusY, modelZ)
+  const aimY = focusY + lookAtHeight
 
-  let deskCamPos = focus.clone().addScaledVector(deskFaceDir, camDist)
-  deskCamPos.y = eyeY
-  deskCamPos = orbitAroundFocus(deskCamPos, focus, yawOffset)
-  deskCamPos.y = eyeY
+  let cameraPosition = focus.clone().addScaledVector(deskFaceDir, camDist)
+  cameraPosition.y = cameraY
+  cameraPosition = orbitAroundFocus(cameraPosition, focus, yawOffset)
+  cameraPosition.y = cameraY
 
-  const viewDir = focus.clone().sub(deskCamPos)
+  const viewDir = focus.clone().sub(cameraPosition)
   viewDir.y = 0
-  viewDir.normalize()
+  if (viewDir.lengthSq() > 0) viewDir.normalize()
+  else viewDir.set(0, 0, -1)
+
   const camRight = new THREE.Vector3()
     .crossVectors(viewDir, new THREE.Vector3(0, 1, 0))
     .normalize()
-  const lookAtTarget = focus.clone().addScaledVector(camRight, lookRightOffset)
-  lookAtTarget.y = eyeY + lookPitchUp
 
-  return lookAtTarget
+  const lookAt = focus.clone().addScaledVector(camRight, lookRightOffset)
+  // Fixed aim height on the desk; shifts with camera only for parallel vertical moves.
+  lookAt.y = aimY + (cameraY - baseCameraY)
+
+  return { cameraPosition, lookAt, focus }
+}
+
+function getProjectsHeights() {
+  const { modelY } = getProjectsDeskConfig()
+  const { focusHeight, orbitHeight, camHeightOffset } = PROJECTS_VIEW
+  const focusY = modelY + focusHeight
+  const orbitCameraY = modelY + orbitHeight
+  const finalCameraY = orbitCameraY + camHeightOffset
+  return { focusY, orbitCameraY, finalCameraY }
+}
+
+/** Final look-at used by ProjectsScreen HUD (matches settled camera). */
+export function getProjectsLookAtTarget() {
+  const { focusY, orbitCameraY, finalCameraY } = getProjectsHeights()
+  return buildProjectsCameraFrame(finalCameraY, focusY, orbitCameraY).lookAt
 }
 
 export function getProjectsViewTargets(playerPosition, cameraOffset) {
-  const { modelX, modelY, modelZ, deskFaceDir } = getProjectsDeskConfig()
-  const { eyeHeight, lookPitchUp, yawOffset, camDist, positionBlend, lookRightOffset } =
-    PROJECTS_VIEW
+  const { focusHeight, camHeightOffset, positionBlend } = PROJECTS_VIEW
+  const { focusY, orbitCameraY, finalCameraY } = getProjectsHeights()
 
-  const eyeY = modelY + eyeHeight
-  const focus = new THREE.Vector3(modelX, eyeY, modelZ)
-
-  let deskCamPos = focus.clone().addScaledVector(deskFaceDir, camDist)
-  deskCamPos.y = eyeY
-  deskCamPos = orbitAroundFocus(deskCamPos, focus, yawOffset)
-  deskCamPos.y = eyeY
+  const orbit = buildProjectsCameraFrame(orbitCameraY, focusY, orbitCameraY)
+  const settled = buildProjectsCameraFrame(finalCameraY, focusY, orbitCameraY)
 
   const followCamPos = new THREE.Vector3(
     playerPosition.x + cameraOffset.x,
     playerPosition.y + cameraOffset.y,
     playerPosition.z + cameraOffset.z,
   )
-  const targetCamPos = followCamPos.clone().lerp(deskCamPos, positionBlend)
-  targetCamPos.x = deskCamPos.x
-  targetCamPos.z = deskCamPos.z
-  targetCamPos.y = THREE.MathUtils.lerp(followCamPos.y, eyeY, positionBlend)
 
-  const viewDir = focus.clone().sub(deskCamPos)
-  viewDir.y = 0
-  viewDir.normalize()
-  const camRight = new THREE.Vector3()
-    .crossVectors(viewDir, new THREE.Vector3(0, 1, 0))
-    .normalize()
-  const lookAtTarget = focus.clone().addScaledVector(camRight, lookRightOffset)
-  lookAtTarget.y = eyeY + lookPitchUp
+  const targetCamPos = followCamPos.clone().lerp(settled.cameraPosition, positionBlend)
+  targetCamPos.x = settled.cameraPosition.x
+  targetCamPos.z = settled.cameraPosition.z
+  targetCamPos.y = finalCameraY
 
-  return { lookAtTarget, targetCamPos, focus }
+  const hasVerticalMove = Math.abs(camHeightOffset) > 1e-4
+
+  return {
+    lookAtTarget: settled.lookAt,
+    lookAtAtOrbit: orbit.lookAt,
+    targetCamPos,
+    orbitCamPos: orbit.cameraPosition,
+    hasVerticalMove,
+    focus: settled.focus,
+  }
 }

@@ -53,7 +53,7 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
 
   const ambientColor = useMemo(() => {
     if (isDarkMode) {
-      return currentIsland === 'projects' ? '#6f7f8f' : '#5f7694'
+      return currentIsland === 'projects' ? '#8fafc8' : '#7a9bb8'
     }
 
     return currentIsland === 'projects' ? '#fff3df' : '#fff6e8'
@@ -61,8 +61,8 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
 
   const ambientIntensity = isDarkMode
     ? currentIsland === 'projects'
-      ? 0.78
-      : 0.62
+      ? 1.4
+      : 1.2
     : currentIsland === 'projects'
       ? 0.62
       : 0.46
@@ -76,11 +76,18 @@ function SceneEnvironment({ isDarkMode, currentIsland }) {
       <ambientLight color={ambientColor} intensity={ambientIntensity} />
       <directionalLight
         position={[-12, 16, 8]}
-        intensity={isDarkMode ? 1.18 : 1.02}
+        intensity={isDarkMode ? 1.8 : 1.02}
         color={isDarkMode ? '#a7b9e2' : '#fff2d8'}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
+      />
+      <pointLight
+        position={[12, 8, -8]}
+        intensity={isDarkMode ? 1.2 : 0}
+        color="#7ba8d4"
+        distance={60}
+        decay={1.5}
       />
     </>
   )

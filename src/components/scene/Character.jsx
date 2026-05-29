@@ -155,29 +155,65 @@ export default function Character() {
       isZoomedRef.current = true
 
       const p = useStore.getState().playerPosition
-      const { lookAtTarget, targetCamPos } = getProjectsViewTargets(p, CAMERA_OFFSET)
+      const {
+        lookAtTarget,
+        lookAtAtOrbit,
+        targetCamPos,
+        orbitCamPos,
+        hasVerticalMove,
+      } = getProjectsViewTargets(p, CAMERA_OFFSET)
 
       const lookDir = new THREE.Vector3()
       camera.getWorldDirection(lookDir)
       const lookAtCurrent = camera.position.clone().addScaledVector(lookDir, 10)
+      const lookAtFrom = lookAtAtOrbit.clone()
+      const lookAtTo = lookAtTarget.clone()
+      const vertical = { t: 0 }
 
-      projectsCameraTweenRef.current = gsap.to(camera.position, {
-        x: targetCamPos.x,
-        y: targetCamPos.y,
-        z: targetCamPos.z,
+      const applyProjectsCamera = (camPos, lookAt) => {
+        camera.position.copy(camPos)
+        camera.up.set(0, 1, 0)
+        camera.lookAt(lookAt)
+      }
+
+      const timeline = gsap.timeline({
+        onComplete: () => applyProjectsCamera(targetCamPos, lookAtTarget),
+      })
+
+      timeline.to(camera.position, {
+        x: orbitCamPos.x,
+        y: orbitCamPos.y,
+        z: orbitCamPos.z,
         duration: 0.9,
         ease: 'power2.inOut',
         onUpdate: () => {
-          lookAtCurrent.lerp(lookAtTarget, 0.38)
+          lookAtCurrent.lerp(lookAtAtOrbit, 0.38)
           camera.up.set(0, 1, 0)
           camera.lookAt(lookAtCurrent)
         },
-        onComplete: () => {
-          camera.position.copy(targetCamPos)
-          camera.up.set(0, 1, 0)
-          camera.lookAt(lookAtTarget)
-        },
+        onComplete: () => applyProjectsCamera(orbitCamPos, lookAtAtOrbit),
       })
+
+      if (hasVerticalMove) {
+        timeline.to(vertical, {
+          t: 1,
+          duration: 0.35,
+          ease: 'power2.inOut',
+          onUpdate: () => {
+            const { t } = vertical
+            camera.position.set(
+              orbitCamPos.x,
+              THREE.MathUtils.lerp(orbitCamPos.y, targetCamPos.y, t),
+              orbitCamPos.z,
+            )
+            lookAtCurrent.copy(lookAtFrom).lerp(lookAtTo, t)
+            camera.up.set(0, 1, 0)
+            camera.lookAt(lookAtCurrent)
+          },
+        })
+      }
+
+      projectsCameraTweenRef.current = timeline
 
       return () => {
         projectsCameraTweenRef.current?.kill()

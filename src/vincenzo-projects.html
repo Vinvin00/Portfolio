@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Projects — Vincenzo</title>
+<script>
+  ;(function () {
+    const embed = new URLSearchParams(location.search).has('embed')
+    document.documentElement.classList.toggle('embed', embed)
+    if (embed) {
+      var vp = document.querySelector('meta[name="viewport"]')
+      if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1')
+    } else {
+      var vp2 = document.querySelector('meta[name="viewport"]')
+      if (vp2) vp2.setAttribute('content', 'width=1280')
+    }
+  })()
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+@font-face {
+  font-family: 'GeneralSans';
+  src: url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Variable.woff2') format('woff2'),
+       url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Variable.woff') format('woff'),
+       url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Variable.ttf') format('truetype');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'GeneralSans';
+  src: url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-VariableItalic.woff2') format('woff2'),
+       url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-VariableItalic.woff') format('woff'),
+       url('/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-VariableItalic.ttf') format('truetype');
+  font-weight: 200 700;
+  font-display: swap;
+  font-style: italic;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #090909;
+  --bg2:     #111;
+  --bg3:     #161616;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text:    #efefef;
+  --muted:   #4a4a4a;
+  --muted2:  #858585;
+  --gs:      'GeneralSans', system-ui, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--gs);
+  font-weight: 300;
+  min-height: 100vh;
+  cursor: none;
+  overflow-x: hidden;
+}
+
+/* grain */
+body::after {
+  content: ''; position: fixed; inset: 0;
+  pointer-events: none; z-index: 900;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.22;
+}
+
+/* cursor */
+#cur  { position:fixed; width:6px; height:6px; border-radius:50%; background:#fff; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
+#curR { position:fixed; width:28px; height:28px; border-radius:50%; border:1px solid rgba(255,255,255,0.16); pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .22s ease,height .22s ease; }
+
+/* layout */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 64px; position: relative; z-index: 1; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 64px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(9,9,9,0.9);
+  backdrop-filter: blur(20px);
+}
+.nav-left { font-size: 13px; font-weight: 300; color: var(--muted2); letter-spacing: 0.01em; }
+.nav-left strong { color: var(--text); font-weight: 500; }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.nav-open-tab {
+  color: var(--muted2);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  transition: color 0.2s;
+  display: none;
+}
+html.embed .nav-open-tab { display: inline; }
+.nav-open-tab:hover { color: var(--text); }
+
+/* PAGE HEADER */
+.page-header { padding: 152px 0 28px; }
+.header-top {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  opacity: 0;
+}
+.page-title-wrap {
+  width: 100%;
+  overflow: visible;
+}
+.page-title-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── FEATURED SECTION ─── */
+.section-featured { padding: 0; }
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;             /* space between cards */
+  padding: 56px 0 0;
+  overflow: visible;
+}
+
+/* ─── SMALL SECTION ─── */
+.section-other {
+  margin-top: 120px;     /* clear visual break */
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+}
+.section-other-label {
+  font-size: 11px; font-weight: 400; color: var(--muted);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 40px;
+  display: flex; align-items: center; gap: 16px;
+}
+.section-other-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.small-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  overflow: visible;
+}
+
+/* BorderGlow shells (content mounted via projects-cards-glow.jsx) */
+.card-glow-shell {
+  opacity: 0;
+  transform: translateY(18px);
+  overflow: visible;
+  min-height: 0;
+}
+.card-glow-shell--featured { min-height: 540px; }
+.card-glow-shell--small { min-height: 320px; }
+.card-glow-shell .border-glow-card,
+.card-glow-shell .projects-border-glow {
+  height: 100%;
+  min-height: inherit;
+}
+.card-glow-shell .card-dom-host,
+.card-glow-shell .card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+  height: 100%;
+}
+.card-glow-shell .card {
+  opacity: 1;
+  transform: none;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+}
+.card-glow-shell .card::before { display: none; }
+.card-glow-shell .card:hover {
+  background: transparent;
+  border-color: transparent;
+}
+.card-glow-shell .card-placeholder {
+  background: transparent;
+}
+
+/* ─── CARD BASE ─── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 36px 32px 32px;
+  position: relative;
+  overflow: hidden;
+  cursor: none;
+  transition: background 0.3s, border-color 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+.card:hover {
+  background: var(--bg3);
+  border-color: var(--border2);
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: #fff;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.45s cubic-bezier(.16,1,.3,1);
+}
+.card:hover::before { transform: scaleX(1); }
+
+/* card header row */
+.card-num {
+  font-size: 10px; font-weight: 400; color: var(--muted);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.card-status {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 3px 9px;
+  border: 1px solid var(--border2); color: var(--muted2);
+}
+.card-status.live { border-color: rgba(255,255,255,0.22); color: var(--text); }
+
+/* image */
+.card-image {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  margin-bottom: 28px;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.card-image-placeholder {
+  font-size: 52px; font-weight: 600; font-style: italic;
+  color: rgba(255,255,255,0.05);
+  letter-spacing: -0.04em; user-select: none;
+}
+.card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* text */
+.card-title {
+  font-size: 30px; font-weight: 500;
+  line-height: 1.05; letter-spacing: -0.025em;
+  color: var(--text); margin-bottom: 12px;
+}
+.card-desc {
+  font-size: 13px; font-weight: 300;
+  color: var(--muted2); line-height: 1.72;
+  margin-bottom: 22px;
+}
+.card-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-bottom: 28px;
+}
+.tag {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.05em;
+  color: var(--muted); border: 1px solid var(--border);
+  padding: 4px 10px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.card:hover .tag { color: var(--muted2); border-color: var(--border2); }
+
+.card-link {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted2); text-decoration: none;
+  margin-top: auto;
+  transition: color 0.2s, gap 0.25s;
+}
+.card-link:hover { color: var(--text); gap: 18px; }
+.card-link svg { flex-shrink: 0; transition: transform 0.25s; }
+.card-link:hover svg { transform: translate(3px,-3px); }
+
+/* ─── FEATURED CARD specifics ─── */
+.card-featured { min-height: 540px; }
+.card-featured .card-image { height: 220px; margin-bottom: 32px; }
+.card-featured .card-title { font-size: 34px; margin-bottom: 14px; }
+.card-featured .card-desc { margin-bottom: 24px; }
+
+/* ─── SMALL CARD specifics ─── */
+.card-small { min-height: 320px; }
+.card-small .card-image { height: 120px; margin-bottom: 20px; }
+.card-small .card-image-placeholder { font-size: 32px; }
+.card-small .card-title { font-size: 20px; margin-bottom: 8px; }
+.card-small .card-desc { font-size: 12px; margin-bottom: 16px; -webkit-line-clamp: 2; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+.card-small .card-num { margin-bottom: 18px; }
+
+/* placeholder styling */
+.card-placeholder { background: var(--bg); }
+.card-placeholder .card-image { opacity: 0.3; }
+.card-placeholder .card-title { color: var(--muted2); }
+
+/* ─── CONTACT ─── */
+.contact-section {
+  margin-top: 120px;
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+  padding-bottom: 80px;
+  opacity: 0; transform: translateY(12px);
+}
+.contact-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 60px;
+}
+.contact-label {
+  font-size: 11px; font-weight: 400; color: var(--muted);
+  letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 14px;
+}
+.contact-email {
+  font-size: clamp(28px, 3.2vw, 46px); font-weight: 500;
+  color: var(--text); text-decoration: none;
+  letter-spacing: -0.03em; line-height: 1;
+  transition: opacity 0.2s;
+}
+.contact-email:hover { opacity: 0.45; }
+.contact-links {
+  display: flex; flex-direction: column; gap: 12px; text-align: right;
+}
+.contact-link {
+  font-size: 12px; font-weight: 300; color: var(--muted2);
+  text-decoration: none; letter-spacing: 0.06em;
+  transition: color 0.2s;
+}
+.contact-link:hover { color: var(--text); }
+
+/* FOOTER */
+footer {
+  padding: 22px 64px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between;
+  position: relative; z-index: 1;
+}
+footer span { font-size: 11px; font-weight: 300; color: var(--muted); letter-spacing: 0.06em; }
+
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #222; }
+
+/* Embedded in portfolio monitor iframe */
+#embed-viewport { display: contents; }
+
+html.embed {
+  height: 100%;
+  overflow: hidden;
+}
+html.embed body {
+  cursor: default;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+html.embed #embed-viewport {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+html.embed #embed-root {
+  transform-origin: top left;
+  will-change: transform;
+}
+html.embed #cur,
+html.embed #curR { display: none; }
+html.embed nav { padding: 0 48px; }
+html.embed .wrap { padding: 0 48px; }
+html.embed .page-header { padding: 100px 0 20px; }
+html.embed .section-other { margin-top: 80px; }
+html.embed .contact-section { margin-top: 80px; padding-bottom: 48px; }
+html.embed footer { padding: 22px 48px; }
+html.embed .card,
+html.embed .card-link,
+html.embed a { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="embed-viewport">
+<div id="embed-root">
+
+<div id="cur"></div>
+<div id="curR"></div>
+
+<nav>
+  <span class="nav-left"><strong>Vincenzo</strong> — Projects</span>
+  <span class="nav-right">
+    <a
+      href="/src/vincenzo-projects.html"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="nav-open-tab"
+      id="nav-open-tab"
+    >Open in new tab</a>
+  </span>
+</nav>
+<script>
+  ;(function () {
+    if (!document.documentElement.classList.contains('embed')) return
+    var link = document.getElementById('nav-open-tab')
+    if (!link) return
+    var url = new URL(location.href)
+    url.searchParams.delete('embed')
+    link.href = url.pathname + url.search + url.hash
+  })()
+</script>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <div class="header-top" id="header-top">
+      <h1 class="page-title-sr">Projects</h1>
+      <div id="projects-title-root" class="page-title-wrap"></div>
+    </div>
+  </header>
+
+  <!-- ─── FEATURED ─── -->
+  <section class="section-featured">
+    <div class="featured-grid">
+
+      <!-- 01 -->
+      <div class="card card-featured" id="c1">
+        <div class="card-num"><span>01</span><span class="card-status live">Live</span></div>
+        <div class="card-image" style="height:220px">
+          <img src="/SpotifyPlaySS.jpeg" alt="Weather Spotify playlist app screenshot" width="800" height="450" />
+        </div>
+        <h2 class="card-title">Weather Playlist</h2>
+        <p class="card-desc">Fetches live weather data and generates a matching Spotify playlist automatically. Sunny gets upbeat, stormy gets moody — runs on schedule via GitHub Actions.</p>
+        <div class="card-tags">
+          <span class="tag">Python</span>
+          <span class="tag">Spotify API</span>
+          <span class="tag">OpenWeatherMap</span>
+          <span class="tag">GitHub Actions</span>
+          <span class="tag">OAuth 2.0</span>
+        </div>
+        <a href="https://github.com/Vinvin00/weather-spotify-playlist" target="_blank" class="card-link">
+          View on GitHub
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H3.5M9.5 1.5V7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- 02 -->
+      <div class="card card-featured" id="c2">
+        <div class="card-num"><span>02</span><span class="card-status live">Live</span></div>
+        <div class="card-image" style="height:220px">
+          <img src="/3Dislandss.png" alt="Isometric portfolio world screenshot" width="800" height="450" />
+        </div>
+        <h2 class="card-title">My Portfolio</h2>
+        <p class="card-desc">An Animal Crossing–style 3D hub world as a portfolio. Walk with WASD, discover sections via proximity triggers, GSAP intro sequence on landing.</p>
+        <div class="card-tags">
+          <span class="tag">React Three Fiber</span>
+          <span class="tag">Drei</span>
+          <span class="tag">GSAP</span>
+          <span class="tag">Zustand</span>
+          <span class="tag">Blender</span>
+        </div>
+        <a href="https://github.com/Vinvin00/Portfolio" target="_blank" class="card-link">
+          View on GitHub
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H3.5M9.5 1.5V7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- 03 -->
+      <div class="card card-featured" id="c3">
+        <div class="card-num"><span>03</span><span class="card-status">In progress</span></div>
+        <div class="card-image" style="height:220px">
+          <img src="/NutriSS.jpeg" alt="NutriSync app screenshot" width="800" height="450" />
+        </div>
+        <h2 class="card-title">NutriSync</h2>
+        <p class="card-desc">Expo app for cycle tracking and nutrition on iOS and Android, backed by Firebase. A three-algorithm engine (CAS, CSS, ADP) adapts meals and macros to cycle phase. I led frontend across onboarding, home, meal planning, calendar, progress, and settings.</p>
+        <div class="card-tags">
+          <span class="tag">React Native</span>
+          <span class="tag">Expo SDK</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Firebase Auth</span>
+          <span class="tag">Firestore</span>
+          <span class="tag">Firebase Storage</span>
+          <span class="tag">react-native-svg</span>
+          <span class="tag">React Navigation</span>
+          <span class="tag">EAS Build</span>
+        </div>
+        <a href="https://www.linkedin.com/company/nutrisync-collective/posts/?feedView=all" target="_blank" rel="noreferrer" class="card-link">
+          View on LinkedIn
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H3.5M9.5 1.5V7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── OTHER PROJECTS ─── -->
+  <section class="section-other" id="section-other">
+    <p class="section-other-label">More work</p>
+    <div class="small-grid">
+
+      <div class="card card-small card-placeholder" id="c4">
+        <div class="card-num"><span>04</span><span class="card-status">Planned</span></div>
+        <div class="card-image"><span class="card-image-placeholder">—</span></div>
+        <h2 class="card-title">Coming soon</h2>
+        <p class="card-desc">In the works.</p>
+        <div class="card-tags"><span class="tag">TBD</span></div>
+      </div>
+
+      <div class="card card-small card-placeholder" id="c5">
+        <div class="card-num"><span>05</span><span class="card-status">Planned</span></div>
+        <div class="card-image"><span class="card-image-placeholder">—</span></div>
+        <h2 class="card-title">Coming soon</h2>
+        <p class="card-desc">In the works.</p>
+        <div class="card-tags"><span class="tag">TBD</span></div>
+      </div>
+
+      <div class="card card-small card-placeholder" id="c6">
+        <div class="card-num"><span>06</span><span class="card-status">Planned</span></div>
+        <div class="card-image"><span class="card-image-placeholder">—</span></div>
+        <h2 class="card-title">Coming soon</h2>
+        <p class="card-desc">In the works.</p>
+        <div class="card-tags"><span class="tag">TBD</span></div>
+      </div>
+
+      <div class="card card-small card-placeholder" id="c7">
+        <div class="card-num"><span>07</span><span class="card-status">Planned</span></div>
+        <div class="card-image"><span class="card-image-placeholder">—</span></div>
+        <h2 class="card-title">Coming soon</h2>
+        <p class="card-desc">In the works.</p>
+        <div class="card-tags"><span class="tag">TBD</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <div class="contact-section" id="contact-el">
+    <div class="contact-inner">
+      <div>
+        <p class="contact-label">Get in touch</p>
+        <a href="mailto:balbi.vincenzo@gmail.com" class="contact-email">balbi.vincenzo@gmail.com</a>
+      </div>
+      <div class="contact-links">
+        <a href="https://github.com/Vinvin00" target="_blank" class="contact-link">GitHub</a>
+        <a href="https://www.linkedin.com/in/vincenzobalbi/" target="_blank" class="contact-link">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2025 Vincenzo</span>
+  <span>Madrid · ES</span>
+</footer>
+
+</div><!-- #embed-root -->
+</div><!-- #embed-viewport -->
+
+<script>
+const EMBED_DESIGN_WIDTH = 1280
+const isEmbed = document.documentElement.classList.contains('embed')
+
+function applyEmbedScale() {
+  if (!isEmbed) return
+  var root = document.getElementById('embed-root')
+  if (!root) return
+
+  var viewW = document.documentElement.clientWidth || window.innerWidth
+  var scale = viewW / EMBED_DESIGN_WIDTH
+
+  root.style.width = EMBED_DESIGN_WIDTH + 'px'
+  root.style.transformOrigin = 'top left'
+  root.style.transform = 'scale(' + scale + ')'
+
+  requestAnimationFrame(function () {
+    var unscaledH = root.offsetHeight
+    root.style.marginBottom = Math.floor(unscaledH * (scale - 1)) + 'px'
+    if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh()
+  })
+}
+
+function refreshEmbedLayout() {
+  applyEmbedScale()
+}
+
+if (isEmbed) {
+  window.addEventListener('resize', refreshEmbedLayout)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', refreshEmbedLayout)
+  } else {
+    refreshEmbedLayout()
+  }
+}
+
+// cursor (standalone only)
+const cur = document.getElementById('cur')
+const curR = document.getElementById('curR')
+if (cur && curR && !document.documentElement.classList.contains('embed')) {
+  let mx=0,my=0,rx=0,ry=0
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY
+    cur.style.left=mx+'px'; cur.style.top=my+'px'
+  })
+  ;(function tick(){
+    rx+=(mx-rx)*0.1; ry+=(my-ry)*0.1
+    curR.style.left=rx+'px'; curR.style.top=ry+'px'
+    requestAnimationFrame(tick)
+  })()
+  document.querySelectorAll('a').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{ curR.style.width='44px'; curR.style.height='44px' })
+    el.addEventListener('mouseleave',()=>{ curR.style.width='28px'; curR.style.height='28px' })
+  })
+}
+
+// gsap
+gsap.registerPlugin(ScrollTrigger)
+
+if (isEmbed) {
+  var embedScroller = document.getElementById('embed-viewport')
+
+  gsap.to('#header-top', { opacity: 1, duration: 0.9, delay: 0.15, ease: 'power2.out' })
+
+  gsap.to('#contact-el', {
+    scrollTrigger: { trigger: '#contact-el', start: 'top 92%', scroller: embedScroller },
+    opacity: 1,
+    y: 0,
+    duration: 0.7,
+    ease: 'power2.out',
+  })
+
+  window.addEventListener('load', refreshEmbedLayout)
+  ScrollTrigger.addEventListener('refresh', applyEmbedScale)
+} else {
+  gsap.to('#header-top', { opacity: 1, duration: 0.9, delay: 0.15, ease: 'power2.out' })
+
+  gsap.to('#contact-el', {
+    scrollTrigger: { trigger: '#contact-el', start: 'top 92%' },
+    opacity: 1,
+    y: 0,
+    duration: 0.7,
+    ease: 'power2.out',
+  })
+}
+</script>
+<script type="module" src="/src/projects-header-title.jsx"></script>
+<script type="module" src="/src/projects-cards-glow.jsx"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@ export default function CVPopup() {
 
   return (
     <div
-      className="fixed bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-[18px] px-5 py-3 transition-colors duration-[400ms]"
+      className="fixed bottom-48 left-1/2 z-40 -translate-x-1/2 rounded-[18px] px-5 py-3 transition-colors duration-[400ms]"
       style={{
         background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
         backdropFilter: 'blur(28px) saturate(180%)',
@@ -18,8 +18,8 @@ export default function CVPopup() {
       }}
     >
       <a
-        href="/cv.pdf"
-        download
+        href="/VincenzoBalbiCV.pdf"
+        download="VincenzoBalbiCV.pdf"
         className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm transition-opacity hover:opacity-90"
         style={{ fontWeight: 400 }}
       >

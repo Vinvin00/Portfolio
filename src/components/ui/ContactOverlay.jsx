@@ -11,7 +11,12 @@ export default function ContactOverlay() {
           <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)', fontWeight: 300 }}>
             Email
           </span>
-          <span>vincenzo@example.com</span>
+          <a
+            href="mailto:balbi.vincenzo@gmail.com"
+            style={{ color: 'rgba(150, 200, 255, 0.95)' }}
+          >
+            balbi.vincenzo@gmail.com
+          </a>
         </div>
         <div
           className="h-px w-full"
@@ -22,7 +27,7 @@ export default function ContactOverlay() {
             LinkedIn
           </span>
           <a
-            href="https://www.linkedin.com/in/vincenzo-placeholder"
+            href="https://www.linkedin.com/in/vincenzobalbi/"
             target="_blank"
             rel="noreferrer"
             style={{ color: 'rgba(150, 200, 255, 0.95)' }}

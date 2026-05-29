@@ -12,6 +12,7 @@ import IntroSequence from './components/intro/IntroSequence'
 import LoadingOverlay from './components/ui/LoadingOverlay'
 import OverlayCard from './components/ui/OverlayCard'
 import CVPopup from './components/ui/CVPopup'
+import AboutOverlay from './components/ui/AboutOverlay'
 import ContactOverlay from './components/ui/ContactOverlay'
 import ProjectCard from './components/ui/ProjectCard'
 import ProjectsScreen from './components/scene/ProjectsScreen'
@@ -129,6 +130,7 @@ export default function App() {
       <VantaBackground isDarkMode={isDarkMode} />
 
       <Canvas
+        dpr={[1, 2]}
         className="h-screen w-screen"
         style={{
           position: 'fixed',
@@ -172,55 +174,7 @@ export default function App() {
 
       <LoadingOverlay onFadeComplete={() => setIntroEnabled(true)} />
       <HUDBar />
-      {activeOverlay === 'about' ? (
-        <OverlayCard title="About">
-          <p>
-            <span
-              style={{
-                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
-                fontWeight: 300,
-              }}
-            >
-              Name:
-            </span>{' '}
-            Vincenzo
-          </p>
-          <p>
-            <span
-              style={{
-                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
-                fontWeight: 300,
-              }}
-            >
-              Location:
-            </span>{' '}
-            Madrid / Segovia
-          </p>
-          <p>
-            <span
-              style={{
-                color: isDarkMode ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.35)',
-                fontWeight: 300,
-              }}
-            >
-              Skills:
-            </span>{' '}
-            Python, APIs, automation,
-            GitHub Actions, React (beginner)
-          </p>
-          <p>Developer building cool things.</p>
-          <div
-            className="mt-2 flex h-28 items-center justify-center rounded-[18px] text-xs"
-            style={{
-              background: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-              border: isDarkMode ? '1px solid rgba(255,255,255,0.13)' : '1px solid rgba(0,0,0,0.1)',
-              color: isDarkMode ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.35)',
-            }}
-          >
-            Headshot placeholder
-          </div>
-        </OverlayCard>
-      ) : null}
+      {activeOverlay === 'about' ? <AboutOverlay /> : null}
 
       {activeOverlay === 'contact' ? <ContactOverlay /> : null}
       {activeOverlay === 'exploration' ? (

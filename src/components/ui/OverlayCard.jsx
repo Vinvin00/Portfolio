@@ -76,7 +76,7 @@ export default function OverlayCard({ title, children, className = '', contentCl
         <button
           type="button"
           onClick={closeWithAnimation}
-          className="absolute right-5 top-5 text-xl leading-none transition"
+          className="absolute right-5 top-5 z-10 text-xl leading-none transition"
           style={{ color: isDarkMode ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 0, 0, 0.35)' }}
           aria-label="Close overlay"
         >

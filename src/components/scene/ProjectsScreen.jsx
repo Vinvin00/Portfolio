@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { getProjectsLookAtTarget } from '../../utils/projectsView'
 import { DEFAULT_PROJECTS_TUNING } from '../../store/projectsViewTuning'
 import useStore from '../../store/useStore'
+import ScaledProjectsIframe from './ScaledProjectsIframe'
 
-const PROJECTS_SITE_PATH = '/projects-site'
 const APPEAR_DELAY_MS = 800
 const IFRAME_FADE_MS = 300
 
@@ -15,7 +15,7 @@ const frameStyle = {
   width: '100%',
   height: '100%',
   background: '#000',
-  border: '6px solid #000',
+  border: '3px solid #000',
   borderRadius: 0,
   overflow: 'hidden',
   boxShadow: '0 0 40px rgba(0, 0, 0, 0.85)',
@@ -131,7 +131,7 @@ export default function ProjectsScreen() {
         style={{
           width: `${tuning.panelWidth}px`,
           height: `${tuning.panelHeight}px`,
-          overflow: 'visible',
+          overflow: 'hidden',
           transform: `translate(${tuning.panelOffsetX}px, ${tuning.panelOffsetY}px)`,
           transformOrigin: 'center center',
           pointerEvents: showIframe ? 'auto' : 'none',
@@ -141,23 +141,7 @@ export default function ProjectsScreen() {
           {phase === 'loading' ? <LoadingView progress={loadProgress} /> : null}
 
           {showIframe ? (
-            <iframe
-              title="Projects"
-              src={PROJECTS_SITE_PATH}
-              style={{
-                display: 'block',
-                width: '100%',
-                height: '100%',
-                margin: 0,
-                padding: 0,
-                border: 'none',
-                borderRadius: 0,
-                background: '#0d1117',
-                opacity: 1,
-                transition: `opacity ${IFRAME_FADE_MS}ms ease`,
-                pointerEvents: 'auto',
-              }}
-            />
+            <ScaledProjectsIframe title="Projects" fadeMs={IFRAME_FADE_MS} />
           ) : null}
         </div>
       </Html>

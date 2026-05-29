@@ -5,9 +5,9 @@ import * as THREE from 'three'
 import { cornersToViewportRect, getMonitorScreenCorners } from '../../utils/monitorScreen'
 import { projectsMonitorMeshRef } from '../../store/monitorRef'
 import useStore from '../../store/useStore'
+import ScaledProjectsIframe from './ScaledProjectsIframe'
 
 const IFRAME_FADE_MS = 300
-const PROJECTS_SITE_PATH = '/projects-site'
 
 const cornerBuffer = [
   new THREE.Vector3(),
@@ -22,7 +22,6 @@ export default function MonitorIframePortal() {
   const isProjectsScreenOpen = useStore((s) => s.isProjectsScreenOpen)
 
   const wrapperRef = useRef(null)
-  const iframeRef = useRef(null)
   const { camera, gl } = useThree()
   const opacityRef = useRef(0)
 
@@ -98,21 +97,19 @@ export default function MonitorIframePortal() {
   if (!isProjectsScreenOpen) return null
 
   return createPortal(
-    <div ref={wrapperRef} style={{ opacity: 0, pointerEvents: 'none' }}>
-      <iframe
-        ref={iframeRef}
+    <div
+      ref={wrapperRef}
+      style={{
+        opacity: 0,
+        pointerEvents: 'none',
+        width: '100%',
+        height: '100%',
+      }}
+    >
+      <ScaledProjectsIframe
         title="Projects showcase"
-        src={PROJECTS_SITE_PATH}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: '100%',
-          margin: 0,
-          padding: 0,
-          border: 'none',
-          borderRadius: 0,
-          background: '#1a1a2e',
-        }}
+        fadeMs={IFRAME_FADE_MS}
+        iframeStyle={{ background: '#090909' }}
       />
     </div>,
     portalRoot,

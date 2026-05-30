@@ -1,6 +1,7 @@
+import { memo } from 'react'
 import useStore from '../../store/useStore'
 
-export default function CVPopup() {
+function CVPopup() {
   const isDarkMode = useStore((state) => state.isDarkMode)
 
   return (
@@ -37,3 +38,5 @@ export default function CVPopup() {
     </div>
   )
 }
+
+export default memo(CVPopup)

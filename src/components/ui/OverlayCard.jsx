@@ -1,8 +1,8 @@
 import { gsap } from 'gsap'
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import useStore from '../../store/useStore'
 
-export default function OverlayCard({ title, children, className = '', contentClassName = '' }) {
+function OverlayCard({ title, children, className = '', contentClassName = '' }) {
   const setActiveOverlay = useStore((state) => state.setActiveOverlay)
   const isDarkMode = useStore((state) => state.isDarkMode)
   const backdropRef = useRef(null)
@@ -104,3 +104,5 @@ export default function OverlayCard({ title, children, className = '', contentCl
     </div>
   )
 }
+
+export default memo(OverlayCard)

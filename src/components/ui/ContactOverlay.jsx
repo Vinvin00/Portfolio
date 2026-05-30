@@ -1,7 +1,8 @@
+import { memo } from 'react'
 import useStore from '../../store/useStore'
 import OverlayCard from './OverlayCard'
 
-export default function ContactOverlay() {
+function ContactOverlay() {
   const isDarkMode = useStore((state) => state.isDarkMode)
 
   return (
@@ -56,3 +57,5 @@ export default function ContactOverlay() {
     </OverlayCard>
   )
 }
+
+export default memo(ContactOverlay)

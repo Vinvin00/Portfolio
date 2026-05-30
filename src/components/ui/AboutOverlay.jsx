@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import useStore from '../../store/useStore'
 import OverlayCard from './OverlayCard'
 
@@ -10,7 +10,7 @@ const sansRegular = "'GeneralSans-Regular', 'VincenzoFont', system-ui, sans-seri
 
 const HEADSHOT_SIZE = 200
 
-export default function AboutOverlay() {
+function AboutOverlay() {
   const isDarkMode = useStore((state) => state.isDarkMode)
   const contentRef = useRef(null)
   const [headshotError, setHeadshotError] = useState(false)
@@ -152,3 +152,5 @@ export default function AboutOverlay() {
     </OverlayCard>
   )
 }
+
+export default memo(AboutOverlay)

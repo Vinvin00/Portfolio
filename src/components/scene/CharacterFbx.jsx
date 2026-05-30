@@ -27,6 +27,7 @@ export function FallingRig({ visible }) {
   }, [fallActions])
 
   useFrame(() => {
+    if (!visible) return
     fallCharacter.position.set(0, 0, 0)
     fallCharacter.rotation.set(0, 0, 0)
   })
@@ -85,13 +86,7 @@ export default function CharacterFbx({ isMoving, introComplete }) {
     [gameplayActions],
   )
 
-  useEffect(() => {
-    if (gameplayActions && Object.keys(gameplayActions).length > 0) {
-      console.log('[CharacterFbx] Gameplay clips:', Object.keys(gameplayActions))
-    }
-  }, [gameplayActions])
-
-  useEffect(() => {
+useEffect(() => {
     if (!introComplete) {
       currentActionRef.current = null
       needsIdleOnLandRef.current = false

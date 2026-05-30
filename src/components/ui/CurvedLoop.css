@@ -1,0 +1,29 @@
+.curved-loop-jacket {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: auto;
+  margin-bottom: -12px;
+}
+
+.curved-loop-svg {
+  user-select: none;
+  width: 100%;
+  aspect-ratio: 100 / 8;
+  overflow: visible;
+  display: block;
+  font-size: clamp(80px, 10vw, 136px);
+  fill: #efefef;
+  font-family: 'GeneralSans', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  text-transform: none;
+  line-height: 1;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+
+.projects-curved-loop-text {
+  font-weight: 600;
+}

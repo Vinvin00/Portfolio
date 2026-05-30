@@ -12,6 +12,7 @@ function ObjectLabel({ label, isNear }) {
   return (
     <>
       <Text
+        resolution={512}
         fontSize={0.24}
         color={labelColor}
         anchorX="center"

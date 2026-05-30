@@ -1,3 +1,5 @@
+import { useGLTF } from '@react-three/drei'
+
 export const MODELS = {
   island: '/models/island.glb',
   character: '/models/character.fbx',
@@ -5,3 +7,6 @@ export const MODELS = {
   walkAnimation: '/models/Walking.fbx',
   fallAnimation: '/models/Falling.fbx',
 }
+
+// Preload all GLTF assets at module level so they are cached before components mount.
+useGLTF.preload(MODELS.island)

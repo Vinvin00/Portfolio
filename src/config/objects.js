@@ -1,3 +1,15 @@
+import { useGLTF } from '@react-three/drei'
+
+// Preload all object GLTFs at module level for faster first render.
+const OBJECT_GLBS = [
+  '/models/message-board.glb',
+  '/models/standing-desk.glb',
+  '/models/mailbox.glb',
+  '/models/file-cabinet.glb',
+  '/models/campfire.glb',
+]
+OBJECT_GLBS.forEach((url) => useGLTF.preload(url))
+
 export const MAIN_ISLAND_OBJECTS = [
   {
     id: 'about-door',
@@ -88,31 +100,3 @@ export const MAIN_ISLAND_OBJECTS = [
   },
 ]
 
-export const PROJECTS_ISLAND_OBJECTS = [
-  {
-    id: 'back-portal',
-    label: '⟵ Return',
-    position: { x: -4, y: 0, z: 0 },
-    model: null,
-    placeholderColor: '#4b88ff',
-    placeholderGeometry: 'torus',
-    action: { type: 'teleport', value: 'main' },
-    proximityThreshold: 2,
-  },
-]
-
-export const PROJECTS = [
-  {
-    id: 'weather-spotify',
-    name: 'Weather Spotify',
-    description: 'Generates Spotify playlists based on current weather conditions.',
-    tech: ['Python', 'Spotify API', 'OpenWeatherMap'],
-    github: 'https://github.com/Vinvin00/weather-spotify-playlist',
-    islandPosition: { x: 2, y: 0, z: 0 },
-    model: null,
-    placeholderColor: '#2f7981',
-    placeholderArgs: [0.9, 1.5, 0.6],
-    placeholderGeometry: 'box',
-    proximityThreshold: 2,
-  },
-]

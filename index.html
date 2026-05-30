@@ -5,10 +5,62 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vincenzo Portfolio</title>
-    <style>html,body,#root{background:#0d1117}</style>
+    <style>
+      html,body,#root{background:#0d1117;margin:0;padding:0}
+      #root-splash{
+        position:fixed;inset:0;z-index:9999;background:#0d1117;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        font-family:system-ui,-apple-system,sans-serif;
+      }
+      #root-splash-name{
+        font-size:clamp(28px,5vw,60px);font-weight:300;
+        letter-spacing:0.2em;color:rgba(255,255,255,0.88);
+        text-transform:uppercase;margin-bottom:6px;user-select:none;
+      }
+      #root-splash-sub{
+        font-size:10px;font-weight:300;letter-spacing:0.35em;
+        color:rgba(255,255,255,0.28);text-transform:uppercase;
+        margin-bottom:44px;user-select:none;
+      }
+      #root-splash-track{
+        width:min(260px,55vw);height:1px;
+        background:rgba(255,255,255,0.07);position:relative;overflow:hidden;
+      }
+      #root-splash-bar{
+        position:absolute;top:0;left:0;height:100%;width:0%;
+        background:rgba(255,255,255,0.55);
+        animation:_pre 2.4s cubic-bezier(0.4,0,0.2,1) forwards;
+      }
+      /* Animate bar to ~70% before React takes over, giving a sense of progress */
+      @keyframes _pre{0%{width:0%}60%{width:55%}100%{width:70%}}
+      #root-splash-pct{
+        margin-top:10px;font-size:10px;letter-spacing:0.08em;
+        color:rgba(255,255,255,0.22);font-variant-numeric:tabular-nums;
+      }
+    </style>
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/src/assets/fonts/GeneralSans_Complete/Fonts/WEB/fonts/GeneralSans-Variable.woff2"
+      crossorigin="anonymous"
+    />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/island.glb" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/standing-desk.glb" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/message-board.glb" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/mailbox.glb" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/file-cabinet.glb" />
+    <link rel="preload" as="fetch" crossorigin="anonymous" href="/models/campfire.glb" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="root-splash">
+        <div id="root-splash-name">Vincenzo</div>
+        <div id="root-splash-sub">Portfolio</div>
+        <div id="root-splash-track"><div id="root-splash-bar"></div></div>
+        <div id="root-splash-pct">0%</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -47,9 +47,9 @@
   --bg3:     #161616;
   --border:  rgba(255,255,255,0.07);
   --border2: rgba(255,255,255,0.13);
-  --text:    #efefef;
-  --muted:   #4a4a4a;
-  --muted2:  #858585;
+  --text:    #f5f5f5;
+  --muted:   #6b6b6b;
+  --muted2:  #a0a0a0;
   --gs:      'GeneralSans', system-ui, sans-serif;
 }
 
@@ -70,7 +70,7 @@ body::after {
   content: ''; position: fixed; inset: 0;
   pointer-events: none; z-index: 900;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  opacity: 0.22;
+  opacity: 0.06;
 }
 
 /* cursor */
@@ -90,7 +90,7 @@ nav {
   background: rgba(9,9,9,0.9);
   backdrop-filter: blur(20px);
 }
-.nav-left { font-size: 13px; font-weight: 300; color: var(--muted2); letter-spacing: 0.01em; }
+.nav-left { font-size: 14px; font-weight: 300; color: var(--muted2); letter-spacing: 0.01em; }
 .nav-left strong { color: var(--text); font-weight: 500; }
 .nav-right {
   display: flex;
@@ -102,16 +102,20 @@ nav {
   letter-spacing: 0.06em;
 }
 .nav-open-tab {
-  color: var(--muted2);
+  color: var(--text);
   text-decoration: none;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: 11px;
-  transition: color 0.2s;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.3);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
   display: none;
 }
-html.embed .nav-open-tab { display: inline; }
-.nav-open-tab:hover { color: var(--text); }
+html.embed .nav-open-tab { display: inline-flex; align-items: center; gap: 7px; }
+.nav-open-tab::after { content: '↗'; font-size: 13px; }
+.nav-open-tab:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.55); }
 
 /* PAGE HEADER */
 .page-header { padding: 152px 0 28px; }
@@ -155,7 +159,7 @@ html.embed .nav-open-tab { display: inline; }
   border-top: 1px solid var(--border);
 }
 .section-other-label {
-  font-size: 11px; font-weight: 400; color: var(--muted);
+  font-size: 12px; font-weight: 400; color: var(--muted);
   letter-spacing: 0.14em; text-transform: uppercase;
   margin-bottom: 40px;
   display: flex; align-items: center; gap: 16px;
@@ -236,13 +240,13 @@ html.embed .nav-open-tab { display: inline; }
 
 /* card header row */
 .card-num {
-  font-size: 10px; font-weight: 400; color: var(--muted);
+  font-size: 12px; font-weight: 400; color: var(--muted);
   letter-spacing: 0.12em; text-transform: uppercase;
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 24px;
 }
 .card-status {
-  font-size: 10px; font-weight: 400; letter-spacing: 0.08em;
+  font-size: 11px; font-weight: 400; letter-spacing: 0.08em;
   text-transform: uppercase; padding: 3px 9px;
   border: 1px solid var(--border2); color: var(--muted2);
 }
@@ -272,7 +276,7 @@ html.embed .nav-open-tab { display: inline; }
   color: var(--text); margin-bottom: 12px;
 }
 .card-desc {
-  font-size: 13px; font-weight: 300;
+  font-size: 14px; font-weight: 300;
   color: var(--muted2); line-height: 1.72;
   margin-bottom: 22px;
 }
@@ -281,7 +285,7 @@ html.embed .nav-open-tab { display: inline; }
   margin-bottom: 28px;
 }
 .tag {
-  font-size: 10px; font-weight: 400; letter-spacing: 0.05em;
+  font-size: 11px; font-weight: 400; letter-spacing: 0.05em;
   color: var(--muted); border: 1px solid var(--border);
   padding: 4px 10px;
   transition: color 0.2s, border-color 0.2s;
@@ -290,7 +294,7 @@ html.embed .nav-open-tab { display: inline; }
 
 .card-link {
   display: inline-flex; align-items: center; gap: 10px;
-  font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 12px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted2); text-decoration: none;
   margin-top: auto;
   transition: color 0.2s, gap 0.25s;
@@ -310,7 +314,7 @@ html.embed .nav-open-tab { display: inline; }
 .card-small .card-image { height: 120px; margin-bottom: 20px; }
 .card-small .card-image-placeholder { font-size: 32px; }
 .card-small .card-title { font-size: 20px; margin-bottom: 8px; }
-.card-small .card-desc { font-size: 12px; margin-bottom: 16px; -webkit-line-clamp: 2; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
+.card-small .card-desc { font-size: 13px; margin-bottom: 16px; -webkit-line-clamp: 2; display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; }
 .card-small .card-num { margin-bottom: 18px; }
 
 /* placeholder styling */
@@ -330,7 +334,7 @@ html.embed .nav-open-tab { display: inline; }
   display: flex; align-items: center; justify-content: space-between; gap: 60px;
 }
 .contact-label {
-  font-size: 11px; font-weight: 400; color: var(--muted);
+  font-size: 12px; font-weight: 400; color: var(--muted);
   letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 14px;
 }
 .contact-email {
@@ -344,7 +348,7 @@ html.embed .nav-open-tab { display: inline; }
   display: flex; flex-direction: column; gap: 12px; text-align: right;
 }
 .contact-link {
-  font-size: 12px; font-weight: 300; color: var(--muted2);
+  font-size: 13px; font-weight: 300; color: var(--muted2);
   text-decoration: none; letter-spacing: 0.06em;
   transition: color 0.2s;
 }
@@ -356,7 +360,7 @@ footer {
   display: flex; justify-content: space-between;
   position: relative; z-index: 1;
 }
-footer span { font-size: 11px; font-weight: 300; color: var(--muted); letter-spacing: 0.06em; }
+footer span { font-size: 12px; font-weight: 300; color: var(--muted); letter-spacing: 0.06em; }
 
 ::-webkit-scrollbar { width: 2px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -494,12 +498,12 @@ html.embed a { cursor: pointer; }
 
       <!-- 03 -->
       <div class="card card-featured" id="c3">
-        <div class="card-num"><span>03</span><span class="card-status">In progress</span></div>
+        <div class="card-num"><span>03</span><span class="card-status live">Done</span></div>
         <div class="card-image" style="height:220px">
-          <img src="/NutriSS.jpeg" alt="NutriSync app screenshot" width="800" height="450" />
+          <img src="/HealthAppSS.jpeg" alt="Women's health app screenshot" width="800" height="450" />
         </div>
-        <h2 class="card-title">NutriSync</h2>
-        <p class="card-desc">Expo app for cycle tracking and nutrition on iOS and Android, backed by Firebase. A three-algorithm engine (CAS, CSS, ADP) adapts meals and macros to cycle phase. I led frontend across onboarding, home, meal planning, calendar, progress, and settings.</p>
+        <h2 class="card-title">Women's Health App</h2>
+        <p class="card-desc">Cross-platform iOS/Android app built for a women's health startup, covering cycle tracking and personalised nutrition. A three-algorithm engine adapts meals and macros to cycle phase, backed by Firebase. I led frontend across onboarding, home, meal planning, calendar, progress, and settings.</p>
         <div class="card-tags">
           <span class="tag">React Native</span>
           <span class="tag">Expo SDK</span>
@@ -511,12 +515,6 @@ html.embed a { cursor: pointer; }
           <span class="tag">React Navigation</span>
           <span class="tag">EAS Build</span>
         </div>
-        <a href="https://www.linkedin.com/company/nutrisync-collective/posts/?feedView=all" target="_blank" rel="noreferrer" class="card-link">
-          View on LinkedIn
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-            <path d="M1.5 9.5L9.5 1.5M9.5 1.5H3.5M9.5 1.5V7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
       </div>
 
     </div>
